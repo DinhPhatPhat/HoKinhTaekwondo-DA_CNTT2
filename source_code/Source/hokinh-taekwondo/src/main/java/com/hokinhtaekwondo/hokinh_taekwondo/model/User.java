@@ -55,9 +55,10 @@ public class User {
     @JsonBackReference
     private Facility facility;
 
+    @Getter
     public enum Role {
-        club_head,
         manager,
+        club_head,
         coach,
         student
     }
@@ -84,12 +85,8 @@ public class User {
         CHIN_DANG("Chín đẳng - Đen 9 vạch trắng"),
         MUOI_DANG("Mười đẳng - Đen 10 vạch trắng");
 
-        private final String displayName;
-
-        BeltLevel(String displayName) {
-            this.displayName = displayName;
+        BeltLevel(String s) {
         }
-
     }
 
 }

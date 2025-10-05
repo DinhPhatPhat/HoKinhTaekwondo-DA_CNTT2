@@ -69,13 +69,28 @@ public class UserService {
         toResponseDTO(updated);
     }
 
-    // --- Delete ---
-    public void delete(String id) {
-        if (!userRepository.existsById(id)) {
-            throw new EntityNotFoundException("User not found with id: " + id);
+    // --- Active ---
+    public boolean active(String id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            user.setIsActive(true);
+            userRepository.save(user);
+            return true;
         }
-        userRepository.deleteById(id);
+        return false;
     }
+
+    // --- Deactivate ---
+    public boolean deactivate(String id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            user.setIsActive(false);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
 
     // --- Get by Id ---
     public UserResponseDTO getById(String id) {
