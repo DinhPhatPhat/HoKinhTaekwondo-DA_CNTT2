@@ -94,6 +94,9 @@ public class FacilityService {
         dto.setAddress(facility.getAddress());
         dto.setPhone(facility.getPhone());
         dto.setNote(facility.getNote());
+        dto.setClasses(facility.getClasses());
+        dto.setImg(facility.getImg());
+        dto.setMapsLink(facility.getMapsLink());
 
         if (facility.getManager() != null) {
             dto.setManagerUserId(facility.getManager().getId());

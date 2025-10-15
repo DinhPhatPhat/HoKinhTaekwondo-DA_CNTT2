@@ -23,4 +23,5 @@ public class FacilityRequestDTO {
     private String note;
 
     private String managerUserId; // id của user quản lý (nếu có)
+
 }

@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.LoginRequestDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserRequestDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.FacilityService;
@@ -25,6 +26,10 @@ public class UserController {
     @Autowired
     private FacilityService facilityService;
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO) {
+        return ResponseEntity.ok(loginRequestDTO);
+    }
 
     @PostMapping("create")
     public ResponseEntity<?> create(@Validated @RequestBody UserRequestDTO requestDTO,
@@ -85,7 +90,7 @@ public class UserController {
             }
 
         }
-
+        return null;
     }
 
     private ResponseEntity<?> checkBindingResult(UserRequestDTO user ,BindingResult bindingResult) {

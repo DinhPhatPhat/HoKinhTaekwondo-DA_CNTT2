@@ -30,6 +30,12 @@ public class Facility {
     @Column(length = 255)
     private String note;
 
+    @Column(name = "maps_link")
+    private String mapsLink;
+
+    @Column
+    private String img;
+
     @Column(name = "created_at", updatable = false, insertable = false)
     private Timestamp createdAt;
 
@@ -45,4 +51,9 @@ public class Facility {
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<User> users;
+
+    @OneToMany(mappedBy = "facility")
+    @JsonManagedReference
+    private List<FacilityClass> classes;
+
 }
