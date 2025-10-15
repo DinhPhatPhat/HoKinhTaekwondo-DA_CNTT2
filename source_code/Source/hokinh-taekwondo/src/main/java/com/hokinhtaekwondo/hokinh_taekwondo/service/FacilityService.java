@@ -61,9 +61,15 @@ public class FacilityService {
 
     // --- Delete ---
     public void deleteFacility(Integer id) {
-        if (!facilityRepository.existsById(id)) {
-            throw new RuntimeException("Facility not found");
+        Facility facility = facilityRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Facility not found"));
+
+        // Kiểm tra xem có User nào thuộc Facility này không
+        List<User> usersInFacility = userRepository.findByFacility(facility);
+        if (!usersInFacility.isEmpty()) {
+            throw new RuntimeException("Không thể xóa cơ sở vì vẫn còn người dùng thuộc về cơ sở này");
         }
+
         facilityRepository.deleteById(id);
     }
 
