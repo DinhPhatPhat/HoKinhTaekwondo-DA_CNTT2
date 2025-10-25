@@ -1,13 +1,10 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.FacilityHomepageDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.FacilityResponseDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.Schedule;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.FacilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.FacilityRequestDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -42,19 +39,16 @@ public class FacilityController {
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
         User user = userService.getCurrentUser(session, token);
-        if (user == null ||
-                !(user.getRole() == User.Role.club_head)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Hãy đăng nhập với tư cách chủ tịch câu lạc bộ");
+        if (user == null || user.getRole()!=0) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ để tạo cơ sở mới.");
         }
-
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) {
             return errorResponse;
         }
         try {
             facilityService.createFacility(requestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Đã tạo cơ sở "+requestDTO.getName());
+            return ResponseEntity.status(HttpStatus.CREATED).body("Đã tạo cơ sở "+ requestDTO.getName());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi tạo cơ sở: " + e.getMessage());
@@ -62,15 +56,22 @@ public class FacilityController {
     }
     @PutMapping("update/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
-                                    @Validated @RequestBody FacilityRequestDTO requestDTO,
+                                    @Validated @RequestBody FacilityUpdateDTO facilityUpdateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
         User user = userService.getCurrentUser(session, token);
-        if (user == null ||
-                !(user.getRole() == User.Role.club_head)) {
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Hãy đăng nhập với tư cách chủ tịch câu lạc bộ");
+                    .body("Hãy đăng nhập.");
+        }
+        if (user.getRole()>1) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Bạn không có quyền cập nhật cơ sở.");
+        }
+        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(),facilityUpdateDTO.getId())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Bạn không quản lý cơ sở này.");
         }
 
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
@@ -79,8 +80,8 @@ public class FacilityController {
         }
 
         try {
-            facilityService.updateFacility(id, requestDTO);
-            return ResponseEntity.ok("Đã cập nhật cơ sở " + requestDTO.getName());
+            facilityService.updateFacility(id, facilityUpdateDTO);
+            return ResponseEntity.ok("Đã cập nhật cơ sở " + facilityUpdateDTO.getName());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Không tìm thấy cơ sở có id = " + id);
@@ -96,9 +97,9 @@ public class FacilityController {
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
         User user = userService.getCurrentUser(session, token);
         if (user == null ||
-                !(user.getRole() == User.Role.club_head)) {
+                (user.getRole() != 0)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Hãy đăng nhập với tư cách chủ tịch câu lạc bộ");
+                    .body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ");
         }
 
         try {
@@ -142,21 +143,21 @@ public class FacilityController {
             for(FacilityClass facilityClass : facility.getClasses()) {
                 List<String> hours = new ArrayList<>();
 
-                if(schedules.get(facilityClass.getDays()) != null) {
-                    hours = schedules.get(facilityClass.getDays()).getShift();
+                if(schedules.get(facilityClass.getDaysOfWeek()) != null) {
+                    hours = schedules.get(facilityClass.getDaysOfWeek()).getShift();
                     hours.add(facilityClass.getStartHour() + "-" + facilityClass.getEndHour());
-                    schedules.get(facilityClass.getDays()).setShift(hours);
+                    schedules.get(facilityClass.getDaysOfWeek()).setShift(hours);
                 }
                 else {
                     hours.add(facilityClass.getStartHour() + "-" + facilityClass.getEndHour());
-                    schedules.put(facilityClass.getDays(), new Schedule(facilityClass.getDays(), hours));
+                    schedules.put(facilityClass.getDaysOfWeek(), new Schedule(facilityClass.getDaysOfWeek(), hours));
                 }
             }
             displayedFacilities.add(new FacilityHomepageDTO(
                     facility.getAddress(),
                     new ArrayList<>(schedules.values()),
                     facility.getMapsLink(),
-                    facility.getImg()
+                    facility.getImage()
             ));
         }
         return ResponseEntity.ok(displayedFacilities);

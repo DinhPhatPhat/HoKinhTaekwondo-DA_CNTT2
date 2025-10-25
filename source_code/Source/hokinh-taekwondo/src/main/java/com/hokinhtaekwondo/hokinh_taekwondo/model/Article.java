@@ -11,26 +11,39 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @NoArgsConstructor
+@Table(name = "articles")
 public class Article {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column
+    private Integer id;
+
+    @Column(name = "title")
     private String title;
-    @Column(columnDefinition = "TEXT")
+
+    @Column(name = "content", columnDefinition = "TEXT")
     private String content;
-    @Column
+
+    @Column(name = "cover_image")
     private String coverImage;
-    @Column
+
+    @Column(name = "date")
     private LocalDateTime date;
-    @Column
+
+    @Column(name = "category")
     private String category;
-    @Column
+
+    @Column(name = "author")
     private String author;
-    @Column(columnDefinition = "TEXT")
+
+    @Column(name = "gallery", columnDefinition = "TEXT")
     private String gallery;
 
-    public Article(String title, String content, String coverImage, LocalDateTime date, String category,  String author, String gallery) {
+    @Column(name = "is_active")
+    private String isActive;
+
+    public Article(String title, String content, String coverImage, LocalDateTime date,
+                   String category, String author, String gallery) {
         this.title = title;
         this.content = content;
         this.coverImage = coverImage;

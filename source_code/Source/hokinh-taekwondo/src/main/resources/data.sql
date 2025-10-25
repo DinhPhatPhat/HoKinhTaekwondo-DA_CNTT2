@@ -1,14 +1,14 @@
 -- Insert facilities
-INSERT INTO facilities (name, address, phone, note, maps_link, img)
+INSERT INTO facilities (name, address, phone_number, description, maps_link, image, is_active)
 VALUES
-    ('Trung tâm cung ứng dịch vụ Văn Hóa - Thể Thao Phường Xuân Hoà', 'Số 185 Cách Mạng Tháng Tám, Quận 3', '0909123456', NULL, '', '/branch2.webp'),
-    ('Nhà văn hóa Phường 15, Quận 10', 'Số 123 Đường ABC, Quận 10', '0909876543', NULL, '', '/branch.webp'),
-    ('Trung tâm thể thao Phường Tân Định, Quận 1', 'Số 456 Lê Thánh Tôn, Quận 1', '0912345678', NULL, '', '/branch2.webp'),
-    ( 'Nhà văn hóa Phường 12, Quận Tân Bình', 'Số 789 Trường Chinh, Quận Tân Bình', '0933445566', NULL, '', '/branch.webp'),
-    ('Trung tâm TDTT Phường 7, Quận 5', 'Số 321 Nguyễn Trãi, Quận 5', '0988999000', NULL, '', '/branch2.webp');
+    ('Trung tâm cung ứng dịch vụ Văn Hóa - Thể Thao Phường Xuân Hoà', 'Số 185 Cách Mạng Tháng Tám, Quận 3', '0909123456', NULL, '', '/branch2.webp',true),
+    ('Nhà văn hóa Phường 15, Quận 10', 'Số 123 Đường ABC, Quận 10', '0909876543', NULL, '', '/branch.webp',true),
+    ('Trung tâm thể thao Phường Tân Định, Quận 1', 'Số 456 Lê Thánh Tôn, Quận 1', '0912345678', NULL, '', '/branch2.webp',true),
+    ( 'Nhà văn hóa Phường 12, Quận Tân Bình', 'Số 789 Trường Chinh, Quận Tân Bình', '0933445566', NULL, '', '/branch.webp',true),
+    ('Trung tâm TDTT Phường 7, Quận 5', 'Số 321 Nguyễn Trãi, Quận 5', '0988999000', NULL, '', '/branch2.webp',true);
 
 -- Insert facility classes
-INSERT INTO facility_class (facility_id, class_name, days, start_hour, end_hour)
+INSERT INTO facility_classes (facility_id, name, days_of_week, start_hour, end_hour)
 VALUES
 -- Facility 1
 (1, 'Lớp 1', '2-4-6', '17:15', '18:45'),
@@ -41,7 +41,7 @@ VALUES
 ('Giải Taekwondo Thành phố Hồ Chí Minh', 'Giải Ba', 'Thành tích đáng tự hào của học viên CLB', '/award.webp', '2024'),
 ('Giải Taekwondo Cấp Quốc Gia', 'Giải Nhất', 'Vinh dự giải nhất cấp quốc gia', '/award1.jpg', '2023');
 
-INSERT INTO article (title, content, cover_image, date, category, author, gallery) VALUES
+INSERT INTO articles (title, content, cover_image, date, category, author, gallery) VALUES
                                                                                        (
                                                                                            'Giải vô địch Taekwondo Đông Nam Á 2025',
                                                                                            '<p>Là một trong 26 đại diện tham gia giải vô địch Taekwondo Đông Nam Á năm 2025, Câu Lạc Bộ Taekwondo Hổ Kình vinh hạnh cử đi 3 đại diện xuất sắc nhất của câu lạc bộ.</p>
