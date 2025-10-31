@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ public class FacilityClassUser {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "facility_class_id", nullable = false)
+    @JsonBackReference
     private FacilityClass facilityClass;
 
     // User ID

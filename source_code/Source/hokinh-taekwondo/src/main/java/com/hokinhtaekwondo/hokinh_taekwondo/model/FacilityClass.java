@@ -1,6 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -54,6 +55,6 @@ public class FacilityClass {
     }
 
     @OneToMany(mappedBy = "facilityClass", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonBackReference
+    @JsonManagedReference
     private List<FacilityClassUser> facilityClassUsers;
 }
