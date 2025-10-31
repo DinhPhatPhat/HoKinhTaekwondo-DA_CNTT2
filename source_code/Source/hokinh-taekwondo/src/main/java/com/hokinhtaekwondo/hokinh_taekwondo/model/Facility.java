@@ -58,7 +58,11 @@ public class Facility {
 
     @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<FacilityClass> classes;
+    private List<FacilityClass> facilityClasses;
+
+    @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Equipment> equipments;
 
     @PrePersist
     protected void onCreate() {

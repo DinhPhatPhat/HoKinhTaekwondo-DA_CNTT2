@@ -69,7 +69,7 @@ public class FacilityController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Bạn không có quyền cập nhật cơ sở.");
         }
-        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(),facilityUpdateDTO.getId())) {
+        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), id)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Bạn không quản lý cơ sở này.");
         }

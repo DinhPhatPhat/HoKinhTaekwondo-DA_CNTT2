@@ -29,7 +29,7 @@ public class UserController {
         return ResponseEntity.ok(loginRequestDTO);
     }
 
-    @PostMapping("create")
+    @PostMapping("/create")
     public ResponseEntity<?> create(@Validated @RequestBody UserCreateDTO userCreateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -68,7 +68,7 @@ public class UserController {
     }
 
 
-    @PutMapping("update")
+    @PutMapping("/update")
     public ResponseEntity<?> update(@Validated @RequestBody UserUpdateDTO userUpdateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,

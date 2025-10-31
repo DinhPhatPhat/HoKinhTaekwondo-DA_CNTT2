@@ -100,7 +100,7 @@ public class FacilityService {
         dto.setName(facility.getName());
         dto.setAddress(facility.getAddress());
         dto.setPhoneNumber(facility.getPhoneNumber());
-        dto.setClasses(facility.getClasses());
+        dto.setClasses(facility.getFacilityClasses());
         dto.setImage(facility.getImage());
         dto.setMapsLink(facility.getMapsLink());
 

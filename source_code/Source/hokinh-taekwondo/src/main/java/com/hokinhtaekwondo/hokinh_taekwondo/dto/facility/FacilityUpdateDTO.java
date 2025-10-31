@@ -9,10 +9,6 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class FacilityUpdateDTO {
-
-    @NotNull(message = "ID cơ sở không được để trống")
-    private Integer id;
-
     @Size(max = 200, message = "Tên tối đa 200 ký tự")
     private String name;
 

@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class FacilityClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "facility_id", nullable = false)
+    @JsonBackReference
     private Facility facility;
 
     @Column(columnDefinition = "TEXT")
@@ -52,5 +54,6 @@ public class FacilityClass {
     }
 
     @OneToMany(mappedBy = "facilityClass", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<FacilityClassUser> facilityClassUsers;
 }
