@@ -1,7 +1,9 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserRequestDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserResponseDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
@@ -25,72 +27,74 @@ public class UserService {
     private final JwtService jwtService;
 
     // --- Create ---
-    public UserResponseDTO create(UserRequestDTO dto) {
+    public UserResponseDTO create(UserCreateDTO dto) {
         User user = new User();
-        user.setId(dto.getId()); // id nhập thủ công
+        user.setId(dto.getId());
         user.setName(dto.getName());
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword()); // TODO: mã hóa password sau
-        user.setAvatar(dto.getAvatar());
-        try {
-            user.setRole(User.Role.valueOf(dto.getRole()));
-            user.setBeltLevel(User.BeltLevel.valueOf(dto.getBeltLevel()));
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Role hoặc BeltLevel không hợp lệ");
-        }
+        user.setRole(dto.getRole());
+        user.setBeltLevel(dto.getBeltLevel());
+
         user.setFacility(facilityRepository.findById(dto.getFacilityId()).orElse(null));
         User saved = userRepository.save(user);
         return toResponseDTO(saved);
     }
 
     // --- Update ---
-    public void update(UserRequestDTO dto, MultipartFile image) throws IOException {
+    public void update(UserUpdateDTO dto) throws IOException {
         User user = userRepository.findById(dto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + dto.getId()));
+                .orElseThrow(() -> new EntityNotFoundException("không tìm thấy người dùng cần cập nhật: " + dto.getId()));
+        if (dto.getName() != null && !dto.getName().isBlank()) {
+            user.setName(dto.getName());
+        }
 
-        user.setName(dto.getName());
-        user.setPhoneNumber(dto.getPhoneNumber());
-        user.setDateOfBirth(dto.getDateOfBirth());
-        user.setEmail(dto.getEmail());
+        if (dto.getPhoneNumber() != null && !dto.getPhoneNumber().isBlank()) {
+            user.setPhoneNumber(dto.getPhoneNumber());
+        }
+
+        if (dto.getDateOfBirth() != null) {
+            user.setDateOfBirth(dto.getDateOfBirth());
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            user.setEmail(dto.getEmail());
+        }
+
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             user.setPassword(dto.getPassword()); // TODO: mã hoá
         }
-        user.setAvatar(dto.getAvatar());
-        user.setRole(User.Role.valueOf(dto.getRole()));
-        user.setBeltLevel(User.BeltLevel.valueOf(dto.getBeltLevel()));
-        user.setFacility(facilityRepository.findById(dto.getFacilityId()).orElseThrow(EntityNotFoundException::new));
-        if (image != null && !image.isEmpty()) {
-            String imagePath = upLoadImage(image, dto.getId());
-            user.setAvatar(imagePath);
-        }
-        User updated = userRepository.save(user);
-        toResponseDTO(updated);
-    }
 
-    // --- Active ---
-    public boolean active(String id) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user != null) {
-            user.setIsActive(true);
+        if (dto.getRole() != null) {
+            user.setRole(dto.getRole());
+        }
+
+        if (dto.getBeltLevel() != null && !dto.getBeltLevel().isBlank()) {
+            user.setBeltLevel(dto.getBeltLevel());
+        }
+
+        if (dto.getIsActive() != null) {
+            user.setIsActive(dto.getIsActive());
+        }
+
+        if (dto.getFacilityId() != null) {
+            user.setFacility(
+                    facilityRepository.findById(dto.getFacilityId())
+                            .orElseThrow(EntityNotFoundException::new)
+            );
+        }
+
+        if (dto.getAvatar() != null && !dto.getAvatar().isBlank()) {
+            user.setAvatar(dto.getAvatar());
+        }
+        try {
             userRepository.save(user);
-            return true;
         }
-        return false;
+        catch (Exception e)
+        {throw new RuntimeException(e);}
     }
-
-    // --- Deactivate ---
-    public boolean deactivate(String id) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user != null) {
-            user.setIsActive(false);
-            userRepository.save(user);
-            return true;
-        }
-        return false;
-    }
-
 
     // --- Get by Id ---
     public UserResponseDTO getById(String id) {
@@ -117,6 +121,16 @@ public class UserService {
         Optional<User> user = userRepository.findById(id);
         return user.isPresent() && user.get().getPassword().equals(password);
     }
+
+    public boolean isManagerOfFacility(String currentUserId, int facilityId) {
+        Facility facility = facilityRepository.findById(facilityId).orElse(null);
+        if (facility == null) {
+            return true;
+        }
+        return facility.getManager().getId().equals(currentUserId);
+    }
+
+
     public String upLoadImage(MultipartFile imageFile, String userId) throws IOException {
 
         String uploadDir = "uploads/image/user/";

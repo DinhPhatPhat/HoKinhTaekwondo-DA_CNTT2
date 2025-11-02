@@ -2,6 +2,7 @@ package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.FacilityRequestDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.FacilityResponseDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.FacilityUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
@@ -21,12 +22,12 @@ public class FacilityService {
     private final UserRepository userRepository;
 
     // --- Create ---
-    public FacilityResponseDTO createFacility(FacilityRequestDTO dto) {
+    public void createFacility(FacilityRequestDTO dto) {
         Facility facility = new Facility();
         facility.setName(dto.getName());
         facility.setAddress(dto.getAddress());
-        facility.setPhone(dto.getPhone());
-        facility.setNote(dto.getNote());
+        facility.setPhoneNumber(dto.getPhoneNumber());
+        facility.setDescription(dto.getDescription());
 
         // Gắn manager nếu có
         if (dto.getManagerUserId() != null) {
@@ -34,19 +35,19 @@ public class FacilityService {
             managerOpt.ifPresent(facility::setManager);
         }
 
-        Facility saved = facilityRepository.save(facility);
-        return toResponseDTO(saved);
+        facilityRepository.save(facility);
+
     }
 
     // --- Update ---
-    public FacilityResponseDTO updateFacility(Integer id, FacilityRequestDTO dto) {
+    public void updateFacility(Integer id, FacilityUpdateDTO dto) {
         Facility facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Facility not found"));
 
         facility.setName(dto.getName());
         facility.setAddress(dto.getAddress());
-        facility.setPhone(dto.getPhone());
-        facility.setNote(dto.getNote());
+        facility.setPhoneNumber(dto.getPhoneNumber());
+        facility.setDescription(dto.getDescription());
 
         if (dto.getManagerUserId() != null) {
             Optional<User> managerOpt = userRepository.findById(dto.getManagerUserId());
@@ -55,8 +56,7 @@ public class FacilityService {
             facility.setManager(null);
         }
 
-        Facility updated = facilityRepository.save(facility);
-        return toResponseDTO(updated);
+        facilityRepository.save(facility);
     }
 
     // --- Delete ---
@@ -64,7 +64,6 @@ public class FacilityService {
         Facility facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Facility not found"));
 
-        // Kiểm tra xem có User nào thuộc Facility này không
         List<User> usersInFacility = userRepository.findByFacility(facility);
         if (!usersInFacility.isEmpty()) {
             throw new RuntimeException("Không thể xóa cơ sở vì vẫn còn người dùng thuộc về cơ sở này");
@@ -80,6 +79,8 @@ public class FacilityService {
         return toResponseDTO(facility);
     }
 
+
+    // --- Get by Id ---
     public Facility getFacilityById(Integer id){
         return facilityRepository.findById(id).orElse(null);
     }
@@ -98,10 +99,9 @@ public class FacilityService {
         dto.setId(facility.getId());
         dto.setName(facility.getName());
         dto.setAddress(facility.getAddress());
-        dto.setPhone(facility.getPhone());
-        dto.setNote(facility.getNote());
-        dto.setClasses(facility.getClasses());
-        dto.setImg(facility.getImg());
+        dto.setPhoneNumber(facility.getPhoneNumber());
+        dto.setClasses(facility.getFacilityClasses());
+        dto.setImage(facility.getImage());
         dto.setMapsLink(facility.getMapsLink());
 
         if (facility.getManager() != null) {

@@ -13,7 +13,7 @@ import lombok.Setter;
 public class Award {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
     @Column
     private String name;
     @Column(name = "award_rank")

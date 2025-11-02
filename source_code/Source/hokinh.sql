@@ -9,7 +9,8 @@ CREATE TABLE facilities (
     name VARCHAR(200) NOT NULL,          -- tên cơ sở
     address VARCHAR(400) DEFAULT NULL,
     phone CHAR(10),
-    note VARCHAR(255) DEFAULT NULL,
+    description VARCHAR(255) DEFAULT NULL,
+    isActive BIT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_facility (name)
@@ -57,5 +58,12 @@ ALTER TABLE facilities
     ADD manager_user_id VARCHAR(100) DEFAULT NULL,
     ADD CONSTRAINT fk_facility_manager FOREIGN KEY (manager_user_id) REFERENCES users(id) ON DELETE SET NULL;
 
--- Test select
-SELECT * FROM users;
+-- classes TABLE --
+CREATE TABLE classes (
+    id VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+	days 
+);
+DROP DATABASE hokinh_taekwondo;
+CREATE DATABASE hokinh_taekwondo
+
