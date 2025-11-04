@@ -1,7 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserCreateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserResponseDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserInClassResponseDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
@@ -9,11 +9,21 @@ import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,7 +37,7 @@ public class UserService {
     private final JwtService jwtService;
 
     // --- Create ---
-    public UserResponseDTO create(UserCreateDTO dto) {
+    public UserInClassResponseDTO create(UserCreateDTO dto) {
         User user = new User();
         user.setId(dto.getId());
         user.setName(dto.getName());
@@ -97,14 +107,14 @@ public class UserService {
     }
 
     // --- Get by Id ---
-    public UserResponseDTO getById(String id) {
+    public UserInClassResponseDTO getById(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
         return toResponseDTO(user);
     }
 
     // --- Get all ---
-    public List<UserResponseDTO> getAll() {
+    public List<UserInClassResponseDTO> getAll() {
         return userRepository.findAll()
                 .stream()
                 .map(this::toResponseDTO)
@@ -165,17 +175,122 @@ public class UserService {
     }
 
     // --- Mapper ---
-    private UserResponseDTO toResponseDTO(User user) {
-        UserResponseDTO dto = new UserResponseDTO();
+    private UserInClassResponseDTO toResponseDTO(User user) {
+        UserInClassResponseDTO dto = new UserInClassResponseDTO();
         dto.setId(user.getId());
         dto.setName(user.getName());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setEmail(user.getEmail());
         dto.setAvatar(user.getAvatar());
-        dto.setRole(String.valueOf(user.getRole()));
+        dto.setRole((user.getRole()));
         dto.setBeltLevel(String.valueOf(user.getBeltLevel()));
         dto.setFacilityId(user.getFacility().getId());
         return dto;
     }
+
+    @Transactional
+    public List<User> bulkCreateUsers(List<UserCreateDTO> userList) {
+
+        if (userList == null || userList.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách người dùng không được trống.");
+        }
+
+        List<User> usersToSave = new ArrayList<>();
+
+        for (UserCreateDTO dto : userList) {
+            User user = new User();
+            user.setId(dto.getId());
+            user.setName(dto.getName());
+            user.setPhoneNumber(dto.getPhoneNumber());
+            user.setDateOfBirth(dto.getDateOfBirth());
+            user.setEmail(dto.getEmail());
+            user.setAvatar(dto.getAvatar());
+            user.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+            user.setRole(dto.getRole());
+            user.setBeltLevel(dto.getBeltLevel());
+            user.setIsActive(true);
+            user.setPassword(dto.getPassword());
+
+            // --- Liên kết cơ sở (Facility) ---
+            if (dto.getFacilityId() != null) {
+                Facility facility = facilityRepository.findById(dto.getFacilityId())
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
+                user.setFacility(facility);
+            } else {
+                throw new IllegalArgumentException("Mỗi người dùng phải có FacilityId hợp lệ.");
+            }
+
+            usersToSave.add(user);
+        }
+
+        // --- Lưu tất cả trong cùng Transaction ---
+        List<User> savedUsers = userRepository.saveAll(usersToSave);
+
+        // --- Xóa mật khẩu khi trả về ---
+        savedUsers.forEach(u -> u.setPassword(null));
+
+        return savedUsers;
+    }
+
+
+    public Page<User> getActiveStudentsByName(String searchKey, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        return userRepository.findByIsActiveTrueAndRoleAndNameContainingIgnoreCase(4, searchKey, pageable);
+    }
+
+    public Page<User> getActiveCoachInstructorByName(String searchKey, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        // Lọc role = 2 hoặc 3
+        return userRepository.findByIsActiveTrueAndRoleInAndNameContainingIgnoreCase(
+                Arrays.asList(2, 3), searchKey, pageable);
+    }
+
+    @Transactional
+    public void bulkUpdateUsers(List<UserUpdateDTO> userList) {
+        for (UserUpdateDTO dto : userList) {
+            User user = userRepository.findById(dto.getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng có ID = " + dto.getId()));
+
+            if (StringUtils.hasText(dto.getName())) {
+                user.setName(dto.getName());
+            }
+            if (StringUtils.hasText(dto.getPhoneNumber())) {
+                user.setPhoneNumber(dto.getPhoneNumber());
+            }
+            if (dto.getDateOfBirth() != null) {
+                user.setDateOfBirth(dto.getDateOfBirth());
+            }
+            if (StringUtils.hasText(dto.getEmail())) {
+                user.setEmail(dto.getEmail());
+            }
+            if (StringUtils.hasText(dto.getAvatar())) {
+                user.setAvatar(dto.getAvatar());
+            }
+            if (dto.getRole() != null) {
+                user.setRole(dto.getRole());
+            }
+            if (dto.getIsActive() != null) {
+                user.setIsActive(dto.getIsActive());
+            }
+            if (StringUtils.hasText(dto.getBeltLevel())) {
+                user.setBeltLevel(dto.getBeltLevel());
+            }
+
+            if (StringUtils.hasText(dto.getPassword())) {
+                user.setPassword(dto.getPassword());
+            }
+
+            // Nếu có facilityId mới
+            if (dto.getFacilityId() != null) {
+                Facility facility = facilityRepository.findById(dto.getFacilityId())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
+                user.setFacility(facility);
+            }
+
+            userRepository.save(user);
+        }
+    }
+
 }

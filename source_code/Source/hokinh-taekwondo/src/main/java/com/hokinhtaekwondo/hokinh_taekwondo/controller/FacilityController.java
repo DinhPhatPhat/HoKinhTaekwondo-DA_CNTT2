@@ -163,8 +163,17 @@ public class FacilityController {
         return ResponseEntity.ok(displayedFacilities);
     }
 
-    @GetMapping("/all_facilities")
-    public ResponseEntity<?> getAllFacilities() {
+    @GetMapping("")
+    public ResponseEntity<?> getFacilities() {
         return  ResponseEntity.ok(facilityService.getAllFacilities());
+    }
+    @GetMapping("/get-active")
+    public ResponseEntity<?> getActiveFacility() {
+        return ResponseEntity.ok(facilityService.getActiveFacilities());
+    }
+
+    @GetMapping("get-break-down")
+    public ResponseEntity<?> getBreakDownFacility() {
+        return ResponseEntity.ok(facilityService.getBreakDownFacilities());
     }
 }

@@ -21,7 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @RestController
-@RequestMapping("/facility-class")
+@RequestMapping("/api/facility-class")
 public class FacilityClassController {
 
     @Autowired

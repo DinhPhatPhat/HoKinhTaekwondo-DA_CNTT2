@@ -93,6 +93,15 @@ public class FacilityService {
                 .collect(Collectors.toList());
     }
 
+    public List<Facility> getActiveFacilities() {
+        return facilityRepository.findAllByIsActive(true);
+    }
+
+    public List<Facility> getBreakDownFacilities() {
+        return facilityRepository.findAllByIsActive(false);
+    }
+
+
     // --- Mapper ---
     private FacilityResponseDTO toResponseDTO(Facility facility) {
         FacilityResponseDTO dto = new FacilityResponseDTO();

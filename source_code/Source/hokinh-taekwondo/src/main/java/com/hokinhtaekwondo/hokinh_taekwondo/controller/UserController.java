@@ -7,12 +7,14 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
+import com.hokinhtaekwondo.hokinh_taekwondo.service.ValidateService;
 
 import java.util.Comparator;
 import java.util.List;
@@ -23,6 +25,8 @@ import java.util.Objects;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private ValidateService validateService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO) {
@@ -42,7 +46,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền tạo người dùng này.");
         }
 
-        ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
+        ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) {
             return errorResponse;
         }
@@ -68,7 +72,7 @@ public class UserController {
     }
 
 
-    @PutMapping("/update")
+    @PutMapping("/update/{id}")
     public ResponseEntity<?> update(@Validated @RequestBody UserUpdateDTO userUpdateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -88,11 +92,10 @@ public class UserController {
             }
         }
 
-        ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
+        ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) {
             return errorResponse;
         }
-
 
         if(user.getRole() == 1 && userService.isManagerOfFacility(user.getId(), userUpdateDTO.getFacilityId())){
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -108,27 +111,110 @@ public class UserController {
         }
     }
 
-    private ResponseEntity<?> checkBindingResult(BindingResult bindingResult) {
-        // BindingResult store valid error, then log and return to front-end
+    @PostMapping("/bulk-create")
+    public ResponseEntity<?> bulkCreate(
+            @Validated @RequestBody List<UserCreateDTO> userList,
+            BindingResult bindingResult,
+            HttpSession session,
+            @CookieValue(value = "token", required = false) String token) throws Exception {
+
+        User currentUser = userService.getCurrentUser(session, token);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Hãy đăng nhập trước khi thực hiện.");
+        }
+
+        // Chỉ chủ nhiệm hoặc quản lý hệ thống mới được thêm người
+        if (currentUser.getRole() > 1) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Bạn không có quyền thêm người dùng.");
+        }
+
+        // Kiểm tra lỗi DTO
         if (bindingResult.hasErrors()) {
-            List<String> fieldOrder = List.of(
-                    "id",
-                    "name",
-                    "phoneNumber",
-                    "dateOfBirth",
-                    "email",
-                    "password",
-                    "avatar",
-                    "role");
             List<String> errors = bindingResult.getFieldErrors().stream()
-                    .sorted(Comparator.comparingInt(e -> fieldOrder.indexOf(e.getField())))
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .toList();
-
-            System.out.println(errors);
-            return ResponseEntity.badRequest().body(errors.getFirst());
+            return ResponseEntity.badRequest().body(errors);
         }
-        return null;
+
+        try {
+            List<User> createdUsers = userService.bulkCreateUsers(userList);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUsers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi hệ thống khi tạo người dùng: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/active-students-by-name")
+    public ResponseEntity<?> getActiveStudentsByName(
+            @RequestParam(defaultValue = "") String searchKey,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            Page<User> students = userService.getActiveStudentsByName(searchKey, page, size);
+
+            // Map sang DTO để ẩn password
+            Page<User> safeStudents = students.map(user -> {
+                user.setPassword(null);
+                return user;
+            });
+
+            return ResponseEntity.ok(safeStudents);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy danh sách học viên: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/active-coach-instructor-by-name")
+    public ResponseEntity<?> getActiveCoachInstructorByName(
+            @RequestParam(defaultValue = "") String searchKey,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            Page<User> users = userService.getActiveCoachInstructorByName(searchKey, page, size);
+
+            // Ẩn mật khẩu trước khi trả về
+            Page<User> safeUsers = users.map(user -> {
+                user.setPassword(null);
+                return user;
+            });
+
+            return ResponseEntity.ok(safeUsers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy danh sách HLV và HDV: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/bulk-update")
+    public ResponseEntity<?> bulkUpdateUsers(
+            @Validated @RequestBody List<UserUpdateDTO> userList,
+            HttpSession session,
+            @CookieValue(value = "token", required = false) String token) throws Exception {
+
+        User currentUser = userService.getCurrentUser(session, token);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Hãy đăng nhập trước khi thực hiện.");
+        }
+
+        if (currentUser.getRole() > 1) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Bạn không có quyền chỉnh sửa người dùng.");
+        }
+
+        try {
+            userService.bulkUpdateUsers(userList);
+            return ResponseEntity.ok("Đã cập nhật thông tin " + userList.size() + " người dùng.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật người dùng: " + e.getMessage());
+        }
     }
 
 }
