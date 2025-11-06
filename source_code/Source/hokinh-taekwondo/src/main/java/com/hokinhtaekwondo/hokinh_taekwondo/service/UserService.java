@@ -107,10 +107,8 @@ public class UserService {
     }
 
     // --- Get by Id ---
-    public UserInClassResponseDTO getById(String id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-        return toResponseDTO(user);
+    public User getById(String id) {
+        return userRepository.findById(id).orElse(null);
     }
 
     // --- Get all ---
@@ -125,11 +123,20 @@ public class UserService {
         return userRepository.existsById(id);
     }
 
-    // Wrong id or password -> false
-    // Correct email and password -> true
-    public boolean checkLogin(String id, String password){
+    // Wrong id or password -> 0
+    // Correct email and password and is inactive-> 1
+    // Correct email and password and is active-> 2
+    public int checkLogin(String id, String password){
         Optional<User> user = userRepository.findById(id);
-        return user.isPresent() && user.get().getPassword().equals(password);
+        if(user.isPresent() && user.get().getPassword().equals(password)){
+            if(user.get().getIsActive()){
+                return 2;
+            }
+            else{
+                return 1;
+            }
+        }
+        return 0;
     }
 
     public boolean isManagerOfFacility(String currentUserId, int facilityId) {

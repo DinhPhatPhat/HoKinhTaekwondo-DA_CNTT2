@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class Session {
     // Session belongs to one FacilityClass (one-to-many)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "facility_class_id")
+    @JsonBackReference
     private FacilityClass facilityClass;
 
     @Column(nullable = false)
@@ -33,6 +35,9 @@ public class Session {
 
     @Column(length = 255)
     private String topic; // Topic or focus of the session
+
+    @Column(name = "video_link", length = 500, nullable = true)
+    private String videoLink; // Summary or report for the session (initially null)
 
     @Column(length = 500, nullable = true)
     private String report; // Summary or report for the session (initially null)

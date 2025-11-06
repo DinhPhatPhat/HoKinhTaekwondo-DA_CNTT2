@@ -4,7 +4,11 @@ import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.LoginRequestDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
+import com.hokinhtaekwondo.hokinh_taekwondo.service.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.domain.Page;
@@ -18,6 +22,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.service.ValidateService;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -27,11 +32,40 @@ public class UserController {
     private UserService userService;
     @Autowired
     private ValidateService validateService;
+    @Autowired
+    private JwtService jwtService;
+
 
     @PostMapping("/login")
-    public ResponseEntity<?> login (@RequestBody LoginRequestDTO loginRequestDTO) {
-        return ResponseEntity.ok(loginRequestDTO);
+    public ResponseEntity<?> login(@Validated @RequestBody LoginRequestDTO loginRequestDTO, HttpSession session,
+                                   BindingResult bindingResult,
+                                   HttpServletResponse response) {
+
+        ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
+        if (errorResponse != null) {
+            return errorResponse;
+        }
+
+        User user = userService.getById(loginRequestDTO.getId());
+        if (user != null) {
+            if (user.getPassword().equals(loginRequestDTO.getPassword())) {
+                session.setAttribute("user", user);
+                // Create token JWT
+                String token = jwtService.generateToken(loginRequestDTO.getId());
+                // Save token to cookie
+                Cookie tokenCookie = new Cookie("token", token);
+                tokenCookie.setHttpOnly(true);
+                tokenCookie.setMaxAge(30 * 24 * 60 * 60); //30 days
+                tokenCookie.setSecure(false); // ⚠️ Đặt lại thành true khi deploy HTTPS
+                tokenCookie.setPath("/");  // Apply for app
+                response.addCookie(tokenCookie);  // Add cookie to response
+
+                return ResponseEntity.ok("Đăng nhập thành công");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Thông tin đăng nhập không hợp lệ");
     }
+
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@Validated @RequestBody UserCreateDTO userCreateDTO,

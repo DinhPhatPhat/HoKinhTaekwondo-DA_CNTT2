@@ -57,4 +57,8 @@ public class FacilityClass {
     @OneToMany(mappedBy = "facilityClass", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<FacilityClassUser> facilityClassUsers;
+
+    @OneToMany(mappedBy = "facilityClass", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Session> sessions;
 }
