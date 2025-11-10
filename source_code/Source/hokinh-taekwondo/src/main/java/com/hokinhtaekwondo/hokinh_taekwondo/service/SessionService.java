@@ -1,17 +1,23 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionBulkUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAndSessionUserBulkCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.SessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.SessionUser;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.SessionRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.SessionUserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,6 +26,7 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
     private final FacilityClassRepository facilityClassRepository;
+    private final SessionUserRepository sessionUserRepository;
 
     // ================= BULK CREATE ==================
     @Transactional
@@ -40,6 +47,55 @@ public class SessionService {
 
             sessionRepository.save(newSession);
         }
+    }
+
+    @Transactional
+    public int bulkCreateSessionsAndUsers(Integer facilityClassId,
+                                          LocalDate startDate,
+                                          LocalDate endDate,
+                                          List<SessionAndSessionUserBulkCreateDTO> dtoList) {
+
+        FacilityClass facilityClass = facilityClassRepository.findById(facilityClassId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học."));
+
+        int createdCount = 0;
+
+        for (SessionAndSessionUserBulkCreateDTO dto : dtoList) {
+            LocalDate current = startDate;
+
+            while (!current.isAfter(endDate)) {
+                // Kiểm tra xem có phải ngày trong tuần của DTO
+                if (current.getDayOfWeek().getValue() == dto.getDayOfWeek()) {
+
+                    // Kiểm tra trùng session
+                    boolean exists = sessionRepository.existsByFacilityClassAndDateAndStartTimeAndEndTime(
+                            facilityClass, current, dto.getStartTime(), dto.getEndTime());
+
+                    if (!exists) {
+                        // Tạo session
+                        Session s = new Session();
+                        s.setFacilityClass(facilityClass);
+                        s.setDate(current);
+                        s.setStartTime(dto.getStartTime());
+                        s.setEndTime(dto.getEndTime());
+                        sessionRepository.save(s);
+
+                        // Tạo sessionUser
+                        for (SessionUserDTO u : dto.getUsers()) {
+                            SessionUser su = new SessionUser();
+                            su.setSessionId(s.getId());
+                            su.setUserId(u.getId());
+                            su.setRoleInSession(u.getRoleInSession());
+                            sessionUserRepository.save(su);
+                        }
+                        createdCount++;
+                    }
+                }
+                current = current.plusDays(1);
+            }
+        }
+
+        return createdCount;
     }
 
     // ================= BULK UPDATE ==================

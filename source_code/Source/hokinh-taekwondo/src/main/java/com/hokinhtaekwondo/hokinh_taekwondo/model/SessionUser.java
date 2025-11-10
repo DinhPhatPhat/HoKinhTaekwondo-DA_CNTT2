@@ -18,7 +18,7 @@ public class SessionUser {
 
     // ID of the session
     @Column(name = "session_id", nullable = false, length = 100)
-    private String sessionId;
+    private int sessionId;
 
     // ID of the user
     @Column(name = "user_id", nullable = false, length = 100)

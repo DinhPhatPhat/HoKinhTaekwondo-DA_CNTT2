@@ -1,8 +1,8 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAndSessionUserBulkCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionBulkUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionCreateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.SessionService;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
@@ -10,14 +10,14 @@ import com.hokinhtaekwondo.hokinh_taekwondo.service.ValidateService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -33,10 +33,13 @@ public class SessionController {
     @Autowired
     private ValidateService validateService;
 
-    // ======== BULK CREATE =========
-    @PostMapping("/bulk-create")
-    public ResponseEntity<?> bulkCreateSessions(
-            @Valid @RequestBody List<SessionCreateDTO> sessionList,
+    // ================= BULK CREATE MULTI-DAY SESSION AND USER ==================
+    @PostMapping("/bulk-create-multi-day")
+    public ResponseEntity<?> bulkCreateSessionsAndUsers(
+            @RequestParam Integer facilityClassId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @Valid @RequestBody List<SessionAndSessionUserBulkCreateDTO> dtoList,
             BindingResult bindingResult,
             HttpSession session,
             @CookieValue(value = "token", required = false) String token) throws Exception {
@@ -52,16 +55,21 @@ public class SessionController {
 
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
-
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        if (daysBetween > 90) {
+            throw new IllegalArgumentException("Khoảng thời gian tạo session không được vượt quá 90 ngày.");
+        }
         try {
-            sessionService.bulkCreateSessions(sessionList);
+            int createdCount = sessionService.bulkCreateSessionsAndUsers(facilityClassId, startDate, endDate, dtoList);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Đã thêm " + sessionList.size() + " buổi học thành công.");
+                    .body("Đã thêm " + createdCount + " buổi học thành công.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi thêm buổi học: " + e.getMessage());
         }
     }
+
+
 
     // ======== BULK UPDATE =========
     @PutMapping("/bulk-update")
@@ -119,5 +127,4 @@ public class SessionController {
                     .body("Lỗi khi lấy danh sách buổi học: " + e.getMessage());
         }
     }
-
 }
