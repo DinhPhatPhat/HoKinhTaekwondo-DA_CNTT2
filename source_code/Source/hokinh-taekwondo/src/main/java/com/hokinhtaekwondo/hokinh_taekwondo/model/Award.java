@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,13 +25,17 @@ public class Award {
     @Column
     private String description;
     @Column
-    private String img;
+    private String image;
+    @Column
+    private boolean isDeleted;
+    @Column
+    private LocalDateTime deletedAt;
 
-    public Award(String name, String rank, String year, String description, String img) {
+    public Award(String name, String rank, String year, String description, String image) {
         this.name = name;
         this.rank = rank;
         this.year = year;
         this.description = description;
-        this.img = img;
+        this.image = image;
     }
 }

@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,26 +31,23 @@ public class Article {
     @Column(name = "date")
     private LocalDateTime date;
 
-    @Column(name = "category")
-    private String category;
-
     @Column(name = "author")
     private String author;
 
     @Column(name = "gallery", columnDefinition = "TEXT")
     private String gallery;
 
-    @Column(name = "is_active")
-    private String isActive;
+    @JoinColumn(name = "category_id")
+    @ManyToOne
+    @JsonManagedReference
+    private ArticleCategory category;
 
-    public Article(String title, String content, String coverImage, LocalDateTime date,
-                   String category, String author, String gallery) {
-        this.title = title;
-        this.content = content;
-        this.coverImage = coverImage;
-        this.date = date;
-        this.category = category;
-        this.author = author;
-        this.gallery = gallery;
-    }
+    @Column
+    private boolean isDeleted;
+
+    @Column
+    private LocalDateTime deletedAt;
+
+    @Column
+    private String type;
 }

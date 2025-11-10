@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface FacilityRepository extends JpaRepository<Facility, Integer> {
     List<Facility> findAllByManager_Id(String managerId);
+    List<Facility> findAllByIsActiveEquals(boolean isActive);
 }

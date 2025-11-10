@@ -1,6 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facility.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.FacilityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,46 +34,45 @@ public class FacilityController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("create")
+    @PostMapping("/create")
     public ResponseEntity<?> create(@Validated @RequestBody FacilityRequestDTO requestDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
-        User user = userService.getCurrentUser(session, token);
-        if (user == null || user.getRole()!=0) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ để tạo cơ sở mới.");
-        }
+//        User user = userService.getCurrentUser(session, token);
+//        if (user == null || user.getRole()!=0) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ để tạo cơ sở mới.");
+//        }
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) {
             return errorResponse;
         }
         try {
-            facilityService.createFacility(requestDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Đã tạo cơ sở "+ requestDTO.getName());
+            return ResponseEntity.status(HttpStatus.CREATED).body(facilityService.createFacility(requestDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi tạo cơ sở: " + e.getMessage());
         }
     }
-    @PutMapping("update/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
                                     @Validated @RequestBody FacilityUpdateDTO facilityUpdateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
         User user = userService.getCurrentUser(session, token);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Hãy đăng nhập.");
-        }
-        if (user.getRole()>1) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Bạn không có quyền cập nhật cơ sở.");
-        }
-        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), id)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Bạn không quản lý cơ sở này.");
-        }
+//        if (user == null) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body("Hãy đăng nhập.");
+//        }
+//        if (user.getRole()>1) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body("Bạn không có quyền cập nhật cơ sở.");
+//        }
+//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), id)) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body("Bạn không quản lý cơ sở này.");
+//        }
 
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) {
@@ -81,7 +81,7 @@ public class FacilityController {
 
         try {
             facilityService.updateFacility(id, facilityUpdateDTO);
-            return ResponseEntity.ok("Đã cập nhật cơ sở " + facilityUpdateDTO.getName());
+            return ResponseEntity.ok(facilityUpdateDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Không tìm thấy cơ sở có id = " + id);
@@ -91,7 +91,7 @@ public class FacilityController {
         }
     }
 
-    @DeleteMapping("delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
@@ -136,11 +136,11 @@ public class FacilityController {
 
     @GetMapping("/homepage")
     public ResponseEntity<?> getFacilitiesHomepage() {
-        List<FacilityResponseDTO> facilities = facilityService.getAllFacilities();
+        List<FacilityWebsiteManagementDTO> facilities = facilityService.getAllFacilitiesForWebsiteManagement();
         List<FacilityHomepageDTO> displayedFacilities = new ArrayList<>();
-        for(FacilityResponseDTO facility : facilities) {
+        for(FacilityWebsiteManagementDTO facility : facilities) {
             HashMap<String, Schedule> schedules = new HashMap<>();
-            for(FacilityClass facilityClass : facility.getClasses()) {
+            for(FacilityClassUpdateDTO facilityClass : facility.getClasses()) {
                 List<String> hours = new ArrayList<>();
 
                 if(schedules.get(facilityClass.getDaysOfWeek()) != null) {
@@ -163,8 +163,13 @@ public class FacilityController {
         return ResponseEntity.ok(displayedFacilities);
     }
 
-    @GetMapping("/all_facilities")
-    public ResponseEntity<?> getAllFacilities() {
-        return  ResponseEntity.ok(facilityService.getAllFacilities());
+    @GetMapping("/all-facilities-website-management")
+    public ResponseEntity<?> getAllFacilitiesForWebsiteManagement() {
+        return  ResponseEntity.ok(facilityService.getAllFacilitiesForWebsiteManagement());
+    }
+
+    @GetMapping("/all-facilities-management")
+    public ResponseEntity<?> getAllFacilitiesForManagement() {
+        return  ResponseEntity.ok(facilityService.getAllFacilitiesForManagement());
     }
 }

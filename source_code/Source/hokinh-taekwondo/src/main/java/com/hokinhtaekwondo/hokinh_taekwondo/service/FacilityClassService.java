@@ -1,7 +1,9 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassCreateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassGeneralInfo;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdateMultiDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
@@ -21,7 +23,7 @@ public class FacilityClassService {
     private final FacilityRepository facilityRepository;
 
     // --- Create ---
-    public void createFacilityClass(FacilityClassCreateDTO dto) {
+    public FacilityClassGeneralInfo createFacilityClass(FacilityClassCreateDTO dto) {
         Facility facility = facilityRepository.findById(dto.getFacilityId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
 
@@ -36,7 +38,7 @@ public class FacilityClassService {
         facilityClass.setCreatedAt(LocalDateTime.now());
         facilityClass.setUpdatedAt(LocalDateTime.now());
 
-        facilityClassRepository.save(facilityClass);
+        return convertToFacilityClassGeneralInfo(facilityClassRepository.save(facilityClass));
     }
 
     // --- Update ---
@@ -67,6 +69,37 @@ public class FacilityClassService {
         facilityClassRepository.save(facilityClass);
     }
 
+    public void updateClasses(List<FacilityClassUpdateMultiDTO> classes) {
+        for(FacilityClassUpdateMultiDTO dto : classes) {
+            FacilityClass facilityClass = facilityClassRepository.findById(dto.getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp có ID = " + dto.getId()));
+
+            if (StringUtils.hasText(dto.getName())) {
+                facilityClass.setName(dto.getName());
+            }
+            if (StringUtils.hasText(dto.getDescription())) {
+                facilityClass.setDescription(dto.getDescription());
+            }
+            if (StringUtils.hasText(dto.getDaysOfWeek())) {
+                facilityClass.setDaysOfWeek(dto.getDaysOfWeek());
+            }
+            if (dto.getStartHour() != null) {
+                facilityClass.setStartHour(dto.getStartHour());
+            }
+            if (dto.getEndHour() != null) {
+                facilityClass.setEndHour(dto.getEndHour());
+            }
+            if (dto.getIsActive() != null) {
+                facilityClass.setIsActive(dto.getIsActive());
+            }
+
+            facilityClass.setUpdatedAt(LocalDateTime.now());
+            facilityClassRepository.save(facilityClass);
+        }
+    }
+
+
+
     // --- Delete ---
     public void deleteFacilityClass(Integer id) {
         FacilityClass facilityClass = facilityClassRepository.findById(id)
@@ -85,5 +118,17 @@ public class FacilityClassService {
 
     public FacilityClass getById(Integer id) {
         return facilityClassRepository.findById(id).orElse(null);
+    }
+
+    public FacilityClassGeneralInfo convertToFacilityClassGeneralInfo(FacilityClass facilityClass) {
+        FacilityClassGeneralInfo facilityClassGeneralInfo = new FacilityClassGeneralInfo();
+        facilityClassGeneralInfo.setId(facilityClass.getId());
+        facilityClassGeneralInfo.setName(facilityClass.getName());
+        facilityClassGeneralInfo.setDescription(facilityClass.getDescription());
+        facilityClassGeneralInfo.setDaysOfWeek(facilityClass.getDaysOfWeek());
+        facilityClassGeneralInfo.setStartHour(facilityClass.getStartHour());
+        facilityClassGeneralInfo.setEndHour(facilityClass.getEndHour());
+        facilityClassGeneralInfo.setIsActive(facilityClass.getIsActive());
+        return facilityClassGeneralInfo;
     }
 }

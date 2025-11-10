@@ -2,6 +2,7 @@ package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdateMultiDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.FacilityClassService;
@@ -21,7 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @RestController
-@RequestMapping("/facility-class")
+@RequestMapping("/api/facility-class")
 public class FacilityClassController {
 
     @Autowired
@@ -51,9 +52,8 @@ public class FacilityClassController {
         if (errorResponse != null) return errorResponse;
 
         try {
-            facilityClassService.createFacilityClass(dto);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Đã tạo lớp " + dto.getName() + " tại cơ sở " + dto.getFacilityId());
+                    .body(facilityClassService.createFacilityClass(dto));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi tạo lớp: " + e.getMessage());
@@ -132,6 +132,31 @@ public class FacilityClassController {
         return ResponseEntity.status(HttpStatus.OK).body(facilityClassService.getAllFacilityClasses());
     }
 
+    @PutMapping("/update-classes-website-management")
+    public ResponseEntity<?> updateFacilityClassesWebsiteManagement(@Valid @RequestBody List<FacilityClassUpdateMultiDTO> classes,
+                                                                    BindingResult bindingResult,
+                                                                    HttpSession session,
+                                                                    @CookieValue(value = "token", required = false) String token) {
+//        User user = userService.getCurrentUser(session, token);
+//
+//        // Kiểm tra role
+//        if (user.getRole() != 0 ) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                    .body("Hãy đăng nhập với tư cách trưởng câu lạc bộ");
+//        }
+
+        System.out.println(classes.getFirst().getName());
+        ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
+        if (errorResponse != null) return errorResponse;
+        try {
+            facilityClassService.updateClasses(classes);
+            return ResponseEntity.ok("Cập nhật các lớp học thành công");
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi hệ thống khi cập nhật lớp: " + e.getMessage());
+        }
+    }
 
 
     private ResponseEntity<?> checkBindingResult(BindingResult bindingResult) {

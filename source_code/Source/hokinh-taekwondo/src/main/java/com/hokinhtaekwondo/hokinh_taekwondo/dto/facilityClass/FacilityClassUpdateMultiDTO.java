@@ -7,7 +7,7 @@ import java.time.LocalTime;
 
 @Getter
 @Setter
-public class FacilityClassUpdateDTO {
+public class FacilityClassUpdateMultiDTO {
 
     @NotNull(message = "ID lớp học không được để trống")
     private Integer id;

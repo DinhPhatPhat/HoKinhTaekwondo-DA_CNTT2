@@ -1,9 +1,14 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.dto.facility;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -24,4 +29,17 @@ public class FacilityRequestDTO {
 
     private String managerUserId; // id của user quản lý (nếu có)
 
+    private String mapsLink;
+
+    private String image;
+
+    @DecimalMin(value = "-180.0", message = "Kinh độ phải từ -180 đến 180")
+    @DecimalMax(value = "180.0", message = "Kinh độ phải từ -180 đến 180")
+    private BigDecimal longitude;
+
+    @DecimalMin(value = "-90.0", message = "Vĩ độ phải từ -90 đến 90")
+    @DecimalMax(value = "90.0", message = "Vĩ độ phải từ -90 đến 90")
+    private BigDecimal latitude;
+
+    private boolean isActive;
 }
