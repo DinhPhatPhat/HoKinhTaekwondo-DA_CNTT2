@@ -8,6 +8,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.ArticleCategory;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.ArticleCategoryRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.ArticleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,8 @@ public class ArticleService {
     private final ArticleCategoryRepository articleCategoryRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final CloudinaryService cloudinaryService;
+    @Value("${cloudinary.cloud-name}")
+    private String cloudName;
 
     // ----------- HELPER: Convert Article to DTO -----------
     private ArticleDTO convertToDTO(Article article) {
@@ -72,6 +75,18 @@ public class ArticleService {
         article.setDeletedAt(dto.getDeletedAt());
         article.setType(dto.getType());
 
+
+
+        for(String imageUrl : dto.getGallery()) {
+            boolean isValid = imageUrl.matches(
+                    "^https://res\\.cloudinary\\.com/" + cloudName + "/image/upload/.+"
+            );
+
+            if (!isValid) {
+                throw new IllegalArgumentException("Invalid Cloudinary image URL");
+            }
+
+        }
         try {
             if (dto.getGallery() != null && !dto.getGallery().isEmpty()) {
                 String galleryJson = objectMapper.writeValueAsString(dto.getGallery());

@@ -19,7 +19,7 @@ public class FacilityClassCreateDTO {
     @Size(max = 500, message = "Mô tả tối đa 500 ký tự")
     private String description;
 
-    @Pattern(regexp = "^(?:[2-8](?:,[2-8])*)?$", message = "Ngày học phải là các số từ 2 đến 8, phân cách bằng dấu phẩy (VD: 2,4,6)")
+    @Pattern(regexp = "^(?:[2-8](?:-[2-8])*)?$", message = "Ngày học phải là các số từ 2 đến 8, phân cách bằng dấu - (VD: 2-4-6)")
     private String daysOfWeek;
 
     @NotNull(message = "Giờ bắt đầu không được để trống")

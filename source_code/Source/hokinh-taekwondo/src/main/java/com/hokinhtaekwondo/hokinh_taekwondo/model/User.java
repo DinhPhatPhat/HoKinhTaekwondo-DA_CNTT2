@@ -20,10 +20,10 @@ public class User {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "phone_number", nullable = false, length = 10)
+    @Column(name = "phone_number", length = 10)
     private String phoneNumber;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
     @Column(length = 100)
@@ -46,7 +46,7 @@ public class User {
     @Column(name = "belt_level", length = 100)
     private String beltLevel = "Không";
 
-    @Column(name = "is_active")
+    @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
     // Many users belong to one facility

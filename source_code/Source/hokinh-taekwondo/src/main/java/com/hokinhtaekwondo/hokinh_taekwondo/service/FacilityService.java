@@ -66,8 +66,13 @@ public class FacilityService {
 
         // Handle manager user
         if (dto.getManagerUserId() != null) {
-            userRepository.findById(dto.getManagerUserId())
-                    .ifPresent(facility::setManager);
+            if(dto.getManagerUserId().isEmpty()) {
+                facility.setManager(null);
+            }
+            else {
+                userRepository.findById(dto.getManagerUserId())
+                        .ifPresent(facility::setManager);
+            }
         }
 
         facility.setUpdatedAt(LocalDateTime.now());
@@ -117,11 +122,21 @@ public class FacilityService {
     }
 
     public List<FacilityManagementDTO> getAllFacilitiesForManagement() {
+        // TODO: Set studentCount
         return facilityRepository.findAll()
                 .stream()
                 .map(this::toFacilityManagementDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<Facility> getActiveFacilities() {
+        return facilityRepository.findAllByIsActive(true);
+    }
+
+    public List<Facility> getBreakDownFacilities() {
+        return facilityRepository.findAllByIsActive(false);
+    }
+
 
     // --- Mapper ---
     private FacilityResponseDTO toResponseDTO(Facility facility) {

@@ -36,17 +36,17 @@ public class FacilityClassController {
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
-        User user = userService.getCurrentUser(session, token);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Hãy đăng nhập trước khi thực hiện.");
-        }
-        if (user.getRole() > 1) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền tạo lớp.");
-        }
+//        User user = userService.getCurrentUser(session, token);
+//        if (user == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Hãy đăng nhập trước khi thực hiện.");
+//        }
+//        if (user.getRole() > 1) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền tạo lớp.");
+//        }
 
-        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), dto.getFacilityId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không quản lý cơ sở này.");
-        }
+//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), dto.getFacilityId())) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không quản lý cơ sở này.");
+//        }
 
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
@@ -66,13 +66,13 @@ public class FacilityClassController {
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
-        User user = userService.getCurrentUser(session, token);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Hãy đăng nhập.");
-        }
-        if (user.getRole() > 1) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền cập nhật lớp.");
-        }
+//        User user = userService.getCurrentUser(session, token);
+//        if (user == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Hãy đăng nhập.");
+//        }
+//        if (user.getRole() > 1) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền cập nhật lớp.");
+//        }
 
         FacilityClass existing = facilityClassService.getById(id);
         if (existing == null) {
@@ -80,10 +80,10 @@ public class FacilityClassController {
         }
 
         // Kiểm tra quyền quản lý của role 1
-        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), existing.getFacility().getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Bạn không quản lý cơ sở chứa lớp này.");
-        }
+//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), existing.getFacility().getId())) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                    .body("Bạn không quản lý cơ sở chứa lớp này.");
+//        }
 
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;

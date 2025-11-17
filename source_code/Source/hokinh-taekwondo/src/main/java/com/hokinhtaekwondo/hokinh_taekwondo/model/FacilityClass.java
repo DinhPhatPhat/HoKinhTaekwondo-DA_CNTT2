@@ -49,6 +49,9 @@ public class FacilityClass {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column(name = "sessions_updated_at")
+    private LocalDateTime sessionsUpdatedAt;
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
@@ -57,4 +60,8 @@ public class FacilityClass {
     @OneToMany(mappedBy = "facilityClass", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<FacilityClassUser> facilityClassUsers;
+
+    @OneToMany(mappedBy = "facilityClass", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Session> sessions;
 }
