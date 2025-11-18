@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -51,6 +53,9 @@ public class FacilityClass {
 
     @Column(name = "sessions_updated_at")
     private LocalDateTime sessionsUpdatedAt;
+
+    @Column(name = "latest_session")
+    private LocalDate latestSession;
 
     @PreUpdate
     protected void onUpdate() {

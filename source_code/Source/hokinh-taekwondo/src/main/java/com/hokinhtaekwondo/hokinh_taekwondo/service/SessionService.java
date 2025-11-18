@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,10 +92,12 @@ public class SessionService {
                         createdCount++;
                     }
                 }
-                current = current.plusDays(1);
+                current = current.plusDays(1); // How about +7
             }
         }
-
+        // Save the latest update time
+        facilityClass.setSessionsUpdatedAt(LocalDateTime.now());
+        facilityClassRepository.save(facilityClass);
         return createdCount;
     }
 
