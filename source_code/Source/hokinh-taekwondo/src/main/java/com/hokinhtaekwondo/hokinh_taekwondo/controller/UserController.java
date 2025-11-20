@@ -29,6 +29,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/user")
+@Validated
 public class UserController {
     @Autowired
     private UserService userService;
