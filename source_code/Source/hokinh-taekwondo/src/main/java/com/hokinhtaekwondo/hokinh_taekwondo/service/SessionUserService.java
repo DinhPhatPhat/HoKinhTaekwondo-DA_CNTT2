@@ -1,6 +1,8 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.CheckinRequestDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentAttendanceDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentReviewDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
@@ -61,4 +63,62 @@ public class SessionUserService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
     }
+
+    public void markAttendance(String currentUserId, StudentAttendanceDTO dto) throws Exception {
+
+        // 1. Kiểm tra current user có trong session chưa
+        SessionUser currentRole = sessionUserRepository
+                .findBySessionIdAndUserId(dto.getSessionId(), currentUserId);
+        if(currentRole == null) {
+            throw new Exception("Bạn không thuộc buổi học này!");
+        }
+
+        // 2. Kiểm tra quyền
+        if (!currentRole.getRoleInSession().equals("leader") &&
+                !currentRole.getRoleInSession().equals("assistant")) {
+            throw new Exception("Bạn không có quyền điểm danh!");
+        }
+
+        // 3. Lấy student trong session
+        SessionUser student = sessionUserRepository
+                .findBySessionIdAndUserId(dto.getSessionId(), dto.getStudentId());
+        if(student == null) {
+            throw new Exception("Không thấy học sinh này trong buổi học!");
+        }
+
+        // 4. Cập nhật attendance
+        student.setAttended(dto.getAttended());
+        sessionUserRepository.save(student);
+    }
+
+
+    public void markReview(String currentUserId, StudentReviewDTO dto) throws Exception {
+
+        // 1. Kiểm tra current user có trong session không
+        SessionUser currentRole = sessionUserRepository
+                .findBySessionIdAndUserId(dto.getSessionId(), currentUserId);
+
+        if (currentRole == null) {
+            throw new Exception("Bạn không thuộc buổi học này!");
+        }
+
+        // 2. Kiểm tra quyền: chỉ leader hoặc assistant được đánh giá
+        if (!currentRole.getRoleInSession().equals("leader") &&
+                !currentRole.getRoleInSession().equals("assistant")) {
+            throw new Exception("Bạn không có quyền đánh giá học sinh!");
+        }
+
+        // 3. Lấy học sinh trong session
+        SessionUser student = sessionUserRepository
+                .findBySessionIdAndUserId(dto.getSessionId(), dto.getStudentId());
+
+        if (student == null) {
+            throw new Exception("Không thấy học sinh này trong buổi học!");
+        }
+
+        // 4. Cập nhật review
+        student.setReview(dto.getReview());
+        sessionUserRepository.save(student);
+    }
+
 }
