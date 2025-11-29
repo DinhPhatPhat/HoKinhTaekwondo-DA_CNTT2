@@ -24,7 +24,7 @@ public class  SessionUser {
     @Column(name = "user_id", nullable = false, length = 100)
     private String userId;
 
-    // Role of this user in the session (main_teacher, assistant, student, etc.)
+    // Role of this user in the session (leader, assistant, student)
     @Column(name = "role_in_session", length = 50)
     private String roleInSession;
 
