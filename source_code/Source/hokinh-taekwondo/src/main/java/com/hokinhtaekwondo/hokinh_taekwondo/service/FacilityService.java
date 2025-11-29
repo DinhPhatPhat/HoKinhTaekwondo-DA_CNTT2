@@ -224,6 +224,8 @@ public class FacilityService {
                 facilityClassGeneralInfo.setDescription(facilityClass.getDescription());
                 facilityClassGeneralInfo.setIsActive(facilityClass.getIsActive());
                 facilityClassGeneralInfo.setDaysOfWeek(facilityClass.getDaysOfWeek());
+                facilityClassGeneralInfo.setLatestSession(facilityClass.getLatestSession());
+                facilityClassGeneralInfo.setSessionsUpdatedAt(facilityClass.getSessionsUpdatedAt());
 
                 classes.add(facilityClassGeneralInfo);
             }

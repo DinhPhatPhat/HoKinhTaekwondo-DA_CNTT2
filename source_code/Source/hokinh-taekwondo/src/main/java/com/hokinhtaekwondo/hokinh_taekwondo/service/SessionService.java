@@ -1,23 +1,22 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionBulkUpdateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAndSessionUserBulkCreateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionCreateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.FullSessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.SessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.SessionUser;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.SessionRepository;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.SessionUserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.ConflictException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +27,8 @@ public class SessionService {
     private final SessionRepository sessionRepository;
     private final FacilityClassRepository facilityClassRepository;
     private final SessionUserRepository sessionUserRepository;
+    private final UserRepository userRepository;
+    private final FacilityClassUserRepository facilityClassUserRepository;
 
     // ================= BULK CREATE ==================
     @Transactional
@@ -60,46 +61,50 @@ public class SessionService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học."));
 
         int createdCount = 0;
-
+        // Find all old sessions
+        List<Integer> oldSessions = sessionRepository.findIdsByFacilityClassIdAndDateBetween(facilityClass.getId(), startDate, endDate);
+        // Delete users in old session and old sessions
+        sessionUserRepository.deleteAllBySessionIdIn(oldSessions);
+        sessionRepository.deleteAllByIdIn(oldSessions);
         for (SessionAndSessionUserBulkCreateDTO dto : dtoList) {
+
             LocalDate current = startDate;
 
+            // 1 ─ Move forward until current's dayOfWeek matches dto.dayOfWeek
+
+            while (current.getDayOfWeek().getValue() != dto.getDayOfWeek()) {
+                current = current.plusDays(1);
+                if (current.isAfter(endDate)) break;
+            }
+
+            // 2 ─ From now on, jump weekly (+7 days)
             while (!current.isAfter(endDate)) {
-                // Kiểm tra xem có phải ngày trong tuần của DTO
-                if (current.getDayOfWeek().getValue() == dto.getDayOfWeek()) {
+                Session s = new Session();
+                s.setFacilityClass(facilityClass);
+                s.setDate(current);
+                s.setStartTime(dto.getStartTime());
+                s.setEndTime(dto.getEndTime());
+                sessionRepository.save(s);
 
-                    // Kiểm tra trùng session
-                    boolean exists = sessionRepository.existsByFacilityClassAndDateAndStartTimeAndEndTime(
-                            facilityClass, current, dto.getStartTime(), dto.getEndTime());
-
-                    if (!exists) {
-                        // Tạo session
-                        Session s = new Session();
-                        s.setFacilityClass(facilityClass);
-                        s.setDate(current);
-                        s.setStartTime(dto.getStartTime());
-                        s.setEndTime(dto.getEndTime());
-                        sessionRepository.save(s);
-
-                        // Tạo sessionUser
-                        for (SessionUserDTO u : dto.getUsers()) {
-                            SessionUser su = new SessionUser();
-                            su.setSessionId(s.getId());
-                            su.setUserId(u.getId());
-                            su.setRoleInSession(u.getRoleInSession());
-                            sessionUserRepository.save(su);
-                        }
-                        createdCount++;
-                    }
+                for (SessionUserDTO u : dto.getUsers()) {
+                    SessionUser su = new SessionUser();
+                    su.setSessionId(s.getId());
+                    su.setUserId(u.getId());
+                    su.setRoleInSession(u.getRoleInSession());
+                    sessionUserRepository.save(su);
                 }
-                current = current.plusDays(1); // How about +7
+                createdCount++;
+                current = current.plusWeeks(1); // +7 days
             }
         }
-        // Save the latest update time
+
         facilityClass.setSessionsUpdatedAt(LocalDateTime.now());
+        facilityClass.setLatestSession(sessionRepository.findTopByFacilityClassOrderByDateDesc(facilityClass).getDate());
         facilityClassRepository.save(facilityClass);
+
         return createdCount;
     }
+
 
     // ================= BULK UPDATE ==================
     @Transactional
@@ -129,6 +134,219 @@ public class SessionService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học có ID: " + facilityClassId));
 
         return sessionRepository.findByFacilityClass_IdAndDateBetween(facilityClass.getId(), startDate, endDate);
+    }
+
+    // ------------------ 1. Lấy danh sách session ----------------------
+    public List<SessionAndUserResponseDTO> getSessions(LocalDate start, LocalDate end, Integer classId) {
+
+        List<Session> sessions = sessionRepository.findSessionsInRange(start, end, classId);
+
+        return sessions.stream().map(s -> {
+            SessionAndUserResponseDTO dto = new SessionAndUserResponseDTO();
+            dto.setId(s.getId());
+            dto.setDate(s.getDate().toString());
+            dto.setStartTime(s.getStartTime().toString());
+            dto.setEndTime(s.getEndTime().toString());
+            dto.setStatus(s.getStatus());
+            dto.setTopic(s.getTopic());
+            dto.setVideoLink(s.getVideoLink());
+            dto.setReport(s.getReport());
+
+            // fetch instructors only
+            List<SessionUser> list = sessionUserRepository.findBySessionId(s.getId());
+            dto.setMainInstructors(list.stream()
+                    .filter(u -> !u.getRoleInSession().equals("student"))
+                    .map(this::toDTO)
+                    .toList());
+
+            dto.setStudents(null);
+            return dto;
+        }).toList();
+    }
+
+    // ------------------ 2. Lấy tất cả students trong session ----------
+    public List<FullSessionUserDTO> getStudentsOfSession(Integer sessionId) {
+
+        List<SessionUser> list = sessionUserRepository.findBySessionId(sessionId);
+
+        return list.stream()
+                .filter(u -> u.getRoleInSession().equals("student"))
+                .map(u -> {
+                    FullSessionUserDTO dto = toDTO(u);
+
+                    Integer classId = facilityClassUserRepository.findActiveClassForUser(u.getUserId());
+                    dto.setClassId(classId);
+
+                    return dto;
+                }).toList();
+    }
+
+    @Transactional
+    public SessionAndUserResponseDTO createSession(SessionAndUserCreateDTO req) {
+        Session session = new Session();
+        session.setDate(LocalDate.parse(req.getDate()));
+        session.setStartTime(LocalTime.parse(req.getStartTime()));
+        session.setEndTime(LocalTime.parse(req.getEndTime()));
+        session.setStatus(req.getStatus());
+        session.setTopic(req.getTopic());
+        session.setVideoLink(req.getVideoLink());
+        session.setReport(req.getReport());
+        FacilityClass facilityClass = facilityClassRepository.findById(req.getClassId())
+                .orElseThrow(
+                        () -> new RuntimeException("Không tìm thấy lớp học với ID là "  + req.getClassId())
+                );
+        session.setFacilityClass(facilityClass);
+        // Get session
+        SessionAndUserResponseDTO responseDTO = new SessionAndUserResponseDTO();
+        Session savedSession = sessionRepository.save(session);
+        responseDTO.setId(savedSession.getId());
+        responseDTO.setDate(savedSession.getDate().toString());
+        responseDTO.setStartTime(savedSession.getStartTime().toString());
+        responseDTO.setEndTime(savedSession.getEndTime().toString());
+        responseDTO.setStatus(savedSession.getStatus());
+        responseDTO.setTopic(savedSession.getTopic());
+        responseDTO.setVideoLink(savedSession.getVideoLink());
+        responseDTO.setReport(savedSession.getReport());
+
+        // Update users inside session
+        if (req.getMainInstructors() != null) {
+            responseDTO.setMainInstructors(createSessionUsers(req.getMainInstructors(), responseDTO.getId()));
+        }
+        if (req.getStudents() != null) {
+            responseDTO.setStudents(createSessionUsers(req.getStudents(),  responseDTO.getId()));
+        }
+        return responseDTO;
+    }
+
+    private List<FullSessionUserDTO> createSessionUsers(List<FullSessionUserDTO> users, Integer sessionId) {
+        List<FullSessionUserDTO> list = new ArrayList<>();
+
+        for (FullSessionUserDTO dto : users) {
+            SessionUser su = new SessionUser();
+            su.setSessionId(sessionId);
+            su.setUserId(dto.getUserId());
+
+            // Common updates
+            list.add(saveInfoUserSession(dto, su));
+        }
+
+        return list;
+    }
+
+    private FullSessionUserDTO saveInfoUserSession( FullSessionUserDTO dto, SessionUser su) {
+        if (dto.getAttended() != null) {
+            if (dto.getRoleInSession() != null ) {
+                if ("off".equals(dto.getRoleInSession()) && dto.getAttended()) {
+                    throw new ConflictException("Người có trạng thái nghỉ dạy không được phép có mặt trong lớp");
+                }
+                su.setRoleInSession(dto.getRoleInSession());
+            }
+            su.setAttended(dto.getAttended());
+        }
+        if (dto.getReview() != null) su.setReview(dto.getReview());
+        if (dto.getCheckinTime() != null ) {
+            if(!dto.getCheckinTime().isBlank()) {
+                su.setCheckinTime(LocalDateTime.parse(dto.getCheckinTime()));
+            }
+            else {
+                su.setCheckinTime(null);
+            }
+        }
+
+        return toDTO(sessionUserRepository.save(su));
+    }
+
+    // ------------------ 3. Cập nhật session ----------------------------
+    @Transactional
+    public SessionAndUserResponseDTO updateSession(SessionAndUserUpdateDTO req) {
+
+        SessionAndUserResponseDTO responseDTO = new SessionAndUserResponseDTO();
+        Session session = sessionRepository.findById(req.getId())
+                .orElseThrow(() -> new RuntimeException("Not found"));
+        responseDTO.setId(session.getId());
+        // Chỉ đổi những field != null
+        if (req.getDate() != null) {
+            session.setDate(LocalDate.parse(req.getDate()));
+            responseDTO.setDate(req.getDate());
+        }
+        if (req.getStartTime() != null) {
+            session.setStartTime(LocalTime.parse(req.getStartTime()));
+            responseDTO.setStartTime(req.getStartTime());
+        }
+        if (req.getEndTime() != null) {
+            session.setEndTime(LocalTime.parse(req.getEndTime()));
+            responseDTO.setEndTime(req.getEndTime());
+        }
+        if (req.getStatus() != null) {
+            session.setStatus(req.getStatus());
+            responseDTO.setStatus(req.getStatus());
+        }
+        if (req.getTopic() != null) {
+            session.setTopic(req.getTopic());
+            responseDTO.setTopic(req.getTopic());
+        }
+        if (req.getVideoLink() != null) {
+            session.setVideoLink(req.getVideoLink());
+            responseDTO.setVideoLink(req.getVideoLink());
+        }
+        if (req.getReport() != null) {
+            session.setReport(req.getReport());
+            responseDTO.setReport(req.getReport());
+        }
+        sessionUserRepository.deleteAllById(req.getSessionUserIds());
+
+        // Update users inside session
+        if (req.getMainInstructors() != null) {
+            responseDTO.setMainInstructors(updateSessionUsers(req.getMainInstructors(), req.getId()));
+            System.out.println(req.getMainInstructors().getFirst().getUserId() +  " " + req.getMainInstructors().getFirst().getName() + req.getMainInstructors().getFirst().getRoleInSession());
+        }
+        if (req.getStudents() != null) {
+            responseDTO.setStudents(updateSessionUsers(req.getStudents(),  req.getId()));
+        }
+        return responseDTO;
+    }
+
+    private List<FullSessionUserDTO> updateSessionUsers(List<FullSessionUserDTO> users, Integer sessionId) {
+        List<FullSessionUserDTO> list = new ArrayList<>();
+
+        for (FullSessionUserDTO dto : users) {
+            SessionUser su;
+
+            // Update
+            if (dto.getId() != null) {
+                su = sessionUserRepository.findById(dto.getId())
+                        .orElseThrow(() -> new RuntimeException("User " + dto.getId() + " not found"));
+            }
+            // Create
+            else {
+                su = new SessionUser();
+                su.setSessionId(sessionId);
+                su.setUserId(dto.getUserId());
+            }
+
+            // Common updates
+            list.add(saveInfoUserSession(dto, su));
+        }
+
+        return list;
+    }
+
+
+    private FullSessionUserDTO toDTO(SessionUser su) {
+        FullSessionUserDTO dto = new FullSessionUserDTO();
+
+        User user = userRepository.findById(su.getUserId()).orElse(null);
+
+        dto.setId(su.getId());
+        dto.setUserId(su.getUserId());
+        dto.setName(user != null ? user.getName() : "");
+        dto.setRoleInSession(su.getRoleInSession());
+        dto.setReview(su.getReview());
+        dto.setAttended(su.getAttended());
+        dto.setCheckinTime(
+                su.getCheckinTime() != null ? su.getCheckinTime().toString() : null
+        );
+        return dto;
     }
 
 }

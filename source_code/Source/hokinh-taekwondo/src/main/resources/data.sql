@@ -163,6 +163,13 @@ INSERT INTO articles (title, content, cover_image, date, category_id, author, ga
 INSERT INTO users (id, name, phone_number, date_of_birth, email, password, avatar, role, belt_level, is_active, facility_id)
 VALUES
     ('u001', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u010', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u011', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u012', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u013', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u014', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u015', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
+    ('u016', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA@example.com', 'hashed_password', NULL, 2, 'white', TRUE, 1),
     ('u002', 'Tran Thi B', '0987654321', '1995-07-20', 'instructorB@example.com', 'hashed_password', NULL, 3, 'black/1', TRUE, 1),
     ('u003', 'Le Van C', '0978123456', '2000-01-05', 'studentC@example.com', 'hashed_password', NULL, 4, 'red', TRUE, 1),
     ('u004', 'Pham Thi D', '0909090909', '2003-11-10', 'studentD@example.com', 'hashed_password', NULL, 4, 'blue', TRUE, 2),

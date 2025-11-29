@@ -1,7 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.dto.facility;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassGeneralInfo;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 

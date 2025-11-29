@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -25,6 +27,10 @@ public class FacilityClassGeneralInfo {
     private LocalTime endHour;
 
     private Boolean isActive;
+
+    private LocalDateTime sessionsUpdatedAt;
+
+    private LocalDate latestSession;
 
     private Integer studentCount;
 }

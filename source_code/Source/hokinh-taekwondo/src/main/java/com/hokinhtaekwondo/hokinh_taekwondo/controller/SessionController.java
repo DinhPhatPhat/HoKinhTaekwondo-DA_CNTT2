@@ -1,8 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAndSessionUserBulkCreateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionBulkUpdateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionCreateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.FullSessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.SessionService;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
@@ -44,15 +43,14 @@ public class SessionController {
             HttpSession session,
             @CookieValue(value = "token", required = false) String token) throws Exception {
 
-        User currentUser = userService.getCurrentUser(session, token);
-        if (currentUser == null)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Hãy đăng nhập trước khi thực hiện.");
-
-        if (currentUser.getRole() > 1)
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Bạn không có quyền thêm buổi học.");
-
+//        User currentUser = userService.getCurrentUser(session, token);
+//        if (currentUser == null)
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body("Hãy đăng nhập trước khi thực hiện.");
+//
+//        if (currentUser.getRole() > 1)
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                    .body("Bạn không có quyền thêm buổi học.");
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
@@ -68,8 +66,6 @@ public class SessionController {
                     .body("Lỗi hệ thống khi thêm buổi học: " + e.getMessage());
         }
     }
-
-
 
     // ======== BULK UPDATE =========
     @PutMapping("/bulk-update")
@@ -125,6 +121,63 @@ public class SessionController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi lấy danh sách buổi học: " + e.getMessage());
+        }
+    }
+
+    // 1. GET sessions in range
+    @GetMapping("/session-management")
+    public ResponseEntity<?> getSessions(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam Integer classId
+    ) {
+        System.out.println(startDate + " " + endDate + " " + classId);
+        try {
+            return ResponseEntity.ok(sessionService.getSessions(
+                    LocalDate.parse(startDate),
+                    LocalDate.parse(endDate),
+                    classId));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    // 2. GET students in session
+    @GetMapping("/{sessionId}/students-management")
+    public ResponseEntity<?> getStudents(@PathVariable Integer sessionId) {
+        try {
+            return ResponseEntity.ok(sessionService.getStudentsOfSession(sessionId));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    // 3. UPDATE session + session users
+    @PutMapping("/update-management")
+    public ResponseEntity<?> update(
+            @RequestBody SessionAndUserUpdateDTO req
+    ) {
+        try {
+            return ResponseEntity.ok(sessionService.updateSession(req));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/create-management")
+    public ResponseEntity<?> create(@RequestBody @Valid SessionAndUserCreateDTO req) {
+        try {
+            return ResponseEntity.ok(sessionService.createSession(req));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
         }
     }
 }

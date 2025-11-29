@@ -1,9 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.LoginRequestDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserCreateDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserCreateForClassDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.UserUpdateDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.JwtService;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
@@ -190,15 +187,9 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size) {
 
         try {
-            Page<User> students = userService.getActiveStudentsByName(searchKey, page, size);
+            Page<UserWithFacilityClass> students = userService.getActiveStudentsByName(searchKey, page, size);
 
-            // Map sang DTO để ẩn password
-            Page<User> safeStudents = students.map(user -> {
-                user.setPassword(null);
-                return user;
-            });
-
-            return ResponseEntity.ok(safeStudents);
+            return ResponseEntity.ok(students);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi lấy danh sách học viên: " + e.getMessage());
@@ -212,15 +203,9 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size) {
 
         try {
-            Page<User> users = userService.getActiveCoachInstructorByName(searchKey, page, size);
+            Page<UserWithFacilityClass> users = userService.getActiveCoachInstructorByName(searchKey, page, size);
 
-            // Ẩn mật khẩu trước khi trả về
-            Page<User> safeUsers = users.map(user -> {
-                user.setPassword(null);
-                return user;
-            });
-
-            return ResponseEntity.ok(safeUsers);
+            return ResponseEntity.ok(users);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi lấy danh sách HLV và HDV: " + e.getMessage());

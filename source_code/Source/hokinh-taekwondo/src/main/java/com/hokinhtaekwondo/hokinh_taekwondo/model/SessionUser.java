@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "session_users")
 @Getter
 @Setter
-public class SessionUser {
+public class  SessionUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

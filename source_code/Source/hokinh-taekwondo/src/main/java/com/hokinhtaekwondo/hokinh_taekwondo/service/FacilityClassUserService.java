@@ -188,4 +188,10 @@ public class FacilityClassUserService {
         facilityClassUserRepository.saveAll(toSave);
     }
 
+    public Integer getCurrentClassIdOfUser(User user) {
+        FacilityClassUser facilityClassUser =  facilityClassUserRepository.findByUserIdAndIsActiveTrue(user.getId())
+                .orElse(new FacilityClassUser());
+        FacilityClass defaultFacilityClass = new FacilityClass();
+        return Optional.ofNullable(facilityClassUser.getFacilityClass()).orElse(defaultFacilityClass).getId();
+    }
 }

@@ -343,16 +343,17 @@ public class UserService {
     }
 
 
-    public Page<User> getActiveStudentsByName(String searchKey, int page, int size) {
+    public Page<UserWithFacilityClass> getActiveStudentsByName(String searchKey, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        return userRepository.findByIsActiveTrueAndRoleAndNameContainingIgnoreCase(4, searchKey, pageable);
+        return userRepository.findByIsActiveTrueAndRoleAndNameContainingIgnoreCase(4, searchKey, pageable)
+                .map(this::toUserWithFacilityClass);
     }
 
-    public Page<User> getActiveCoachInstructorByName(String searchKey, int page, int size) {
+    public Page<UserWithFacilityClass> getActiveCoachInstructorByName(String searchKey, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         // Lọc role = 2 hoặc 3
         return userRepository.findByIsActiveTrueAndRoleInAndNameContainingIgnoreCase(
-                Arrays.asList(2, 3), searchKey, pageable);
+                Arrays.asList(2, 3), searchKey, pageable).map(this::toUserWithFacilityClass);
     }
 
     @Transactional
@@ -401,4 +402,22 @@ public class UserService {
         }
     }
 
+    private UserWithFacilityClass toUserWithFacilityClass(User user) {
+        UserWithFacilityClass userWithFacilityClass = new UserWithFacilityClass();
+        userWithFacilityClass.setId(user.getId());
+        userWithFacilityClass.setRole(user.getRole());
+        userWithFacilityClass.setName(user.getName());
+        userWithFacilityClass.setPhoneNumber(user.getPhoneNumber());
+        userWithFacilityClass.setDateOfBirth(user.getDateOfBirth());
+        userWithFacilityClass.setEmail(user.getEmail());
+        userWithFacilityClass.setAvatar(user.getAvatar());
+        userWithFacilityClass.setFacilityId(user.getFacility().getId());
+        userWithFacilityClass.setBeltLevel(user.getBeltLevel());
+        userWithFacilityClass.setPassword(null);
+        userWithFacilityClass.setIsActive(user.getIsActive());
+        userWithFacilityClass.setCreatedAt(user.getCreatedAt());
+        userWithFacilityClass.setClassId(facilityClassUserService.getCurrentClassIdOfUser(user));
+
+        return userWithFacilityClass;
+    }
 }
