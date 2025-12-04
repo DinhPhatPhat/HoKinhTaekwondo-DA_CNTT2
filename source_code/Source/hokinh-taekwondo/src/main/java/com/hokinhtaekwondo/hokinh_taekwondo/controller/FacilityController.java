@@ -34,7 +34,7 @@ public class FacilityController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/create")
+    @PostMapping("/admin/create")
     public ResponseEntity<?> create(@Validated @RequestBody FacilityRequestDTO requestDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -54,7 +54,7 @@ public class FacilityController {
                     .body("Lỗi hệ thống khi tạo cơ sở: " + e.getMessage());
         }
     }
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
                                     @Validated @RequestBody FacilityUpdateDTO facilityUpdateDTO,
                                     BindingResult bindingResult,
@@ -91,7 +91,7 @@ public class FacilityController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
@@ -163,12 +163,12 @@ public class FacilityController {
         return ResponseEntity.ok(displayedFacilities);
     }
 
-    @GetMapping("/all-facilities-website-management")
+    @GetMapping("/admin/website-management")
     public ResponseEntity<?> getAllFacilitiesForWebsiteManagement() {
         return  ResponseEntity.ok(facilityService.getAllFacilitiesForWebsiteManagement());
     }
 
-    @GetMapping("/all-facilities-management")
+    @GetMapping("/admin/management")
     public ResponseEntity<?> getAllFacilitiesForManagement() {
         return  ResponseEntity.ok(facilityService.getAllFacilitiesForManagement());
     }

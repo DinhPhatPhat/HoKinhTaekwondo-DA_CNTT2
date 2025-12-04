@@ -258,10 +258,10 @@ public class SessionService {
 
     // ------------------ 3. Cập nhật session ----------------------------
     @Transactional
-    public SessionAndUserResponseDTO updateSession(SessionAndUserUpdateDTO req) {
+    public SessionAndUserResponseDTO updateSession(SessionAndUserUpdateDTO req, Integer sessionId) {
 
         SessionAndUserResponseDTO responseDTO = new SessionAndUserResponseDTO();
-        Session session = sessionRepository.findById(req.getId())
+        Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Not found"));
         responseDTO.setId(session.getId());
         // Chỉ đổi những field != null
@@ -297,11 +297,11 @@ public class SessionService {
 
         // Update users inside session
         if (req.getMainInstructors() != null) {
-            responseDTO.setMainInstructors(updateSessionUsers(req.getMainInstructors(), req.getId()));
+            responseDTO.setMainInstructors(updateSessionUsers(req.getMainInstructors(), sessionId));
             System.out.println(req.getMainInstructors().getFirst().getUserId() +  " " + req.getMainInstructors().getFirst().getName() + req.getMainInstructors().getFirst().getRoleInSession());
         }
         if (req.getStudents() != null) {
-            responseDTO.setStudents(updateSessionUsers(req.getStudents(),  req.getId()));
+            responseDTO.setStudents(updateSessionUsers(req.getStudents(),  sessionId));
         }
         return responseDTO;
     }
@@ -331,6 +331,14 @@ public class SessionService {
         return list;
     }
 
+    @Transactional
+    public Session deleteSession(Integer sessionId) {
+        Session deletedSession = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy buổi học có id " + sessionId));
+        sessionUserRepository.deleteAllBySessionId(sessionId);
+        sessionRepository.deleteById(sessionId);
+        return deletedSession;
+    }
 
     private FullSessionUserDTO toDTO(SessionUser su) {
         FullSessionUserDTO dto = new FullSessionUserDTO();

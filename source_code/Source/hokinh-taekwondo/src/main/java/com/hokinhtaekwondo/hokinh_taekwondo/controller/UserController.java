@@ -67,7 +67,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/create")
+    @PostMapping("/admin/create")
     public ResponseEntity<?> create(@Validated @RequestBody UserCreateDTO userCreateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -106,7 +106,7 @@ public class UserController {
     }
 
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> update(@Validated @RequestBody UserUpdateDTO userUpdateDTO,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -145,7 +145,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/bulk-create")
+    @PostMapping("/admin/bulk-create")
     public ResponseEntity<?> bulkCreate(
             @Validated @RequestBody List<UserCreateDTO> userList,
             BindingResult bindingResult,
@@ -181,7 +181,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/active-students-by-name")
+    @GetMapping("/admin/active-students-by-name")
     public ResponseEntity<?> getActiveStudentsByName(
             @RequestParam(defaultValue = "") String searchKey,
             @RequestParam(defaultValue = "0") int page,
@@ -197,7 +197,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/active-coach-instructor-by-name")
+    @GetMapping("/admin/active-coach-instructor-by-name")
     public ResponseEntity<?> getActiveCoachInstructorByName(
             @RequestParam(defaultValue = "") String searchKey,
             @RequestParam(defaultValue = "0") int page,
@@ -213,7 +213,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/all-manager-options")
+    @GetMapping("/admin/all-manager-options")
     public ResponseEntity<?> getAllManagerOptions() {
         try {
             return ResponseEntity.ok(userService.getAllManagersAsOptions());
@@ -224,7 +224,7 @@ public class UserController {
         }
     }
 
-    @PutMapping("/bulk-update")
+    @PutMapping("/admin/bulk-update")
     public ResponseEntity<?> bulkUpdateUsers(
             @Validated @RequestBody List<UserUpdateDTO> userList,
             HttpSession session,
@@ -250,7 +250,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/create-member-for-class")
+    @PostMapping("/admin/create-member-for-class")
     public ResponseEntity<?> createMemberForClass(
             @Validated @RequestBody List<UserCreateForClassDTO> userList,
             BindingResult bindingResult,

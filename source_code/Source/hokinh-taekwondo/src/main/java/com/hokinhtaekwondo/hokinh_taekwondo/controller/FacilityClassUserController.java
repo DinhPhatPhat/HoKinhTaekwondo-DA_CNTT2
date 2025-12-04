@@ -34,7 +34,7 @@ public class FacilityClassUserController {
     @Autowired
     private ValidateService validateService;
 
-    @PostMapping("/create")
+    @PostMapping("/admin/create")
     public ResponseEntity<?> create(@Valid @RequestBody FacilityClassUserCreateDTO dto,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -68,7 +68,7 @@ public class FacilityClassUserController {
     }
 
     // 🟡 Cập nhật vai trò hoặc trạng thái trong lớp
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
                                     @Valid @RequestBody FacilityClassUserUpdateDTO dto,
                                     BindingResult bindingResult,
@@ -105,7 +105,7 @@ public class FacilityClassUserController {
     }
 
     //  Xóa (gỡ user khỏi lớp)
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
@@ -134,7 +134,7 @@ public class FacilityClassUserController {
     }
 
     // Lấy danh sách người dùng còn hoạt động trong lớp
-    @GetMapping("/active/{classId}")
+    @GetMapping("/admin/active/{classId}")
     public ResponseEntity<?> getActiveUsersByClass(@PathVariable Integer classId) {
         try {
             List<UserInClassResponseDTO> users = facilityClassUserService.getActiveUsersByClassId(classId);
@@ -146,7 +146,7 @@ public class FacilityClassUserController {
     }
 
     // Lấy danh sách người dùng không còn hoạt động trong lớp
-    @GetMapping("/in-active/{classId}")
+    @GetMapping("/admin/inactive/{classId}")
     public ResponseEntity<?> getInActiveUsersByClass(@PathVariable Integer classId) {
         try {
             List<UserInClassResponseDTO> users = facilityClassUserService.getInActiveUsersByClassId(classId);
@@ -158,7 +158,7 @@ public class FacilityClassUserController {
     }
 
 
-    @PostMapping("/bulk-create")
+    @PostMapping("/admin/bulk-create")
     public ResponseEntity<?> bulkCreate(
             @Validated @RequestBody FacilityClassUserBulkCreateDTO dto,
             BindingResult bindingResult,
@@ -189,7 +189,7 @@ public class FacilityClassUserController {
         }
     }
 
-    @PutMapping("/bulk-update")
+    @PutMapping("/admin/bulk-update")
     public ResponseEntity<?> bulkUpdate(
             @Validated @RequestBody FacilityClassUserBulkUpdateDTO dto,
             BindingResult bindingResult,
@@ -217,6 +217,21 @@ public class FacilityClassUserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi thêm người vào lớp: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/admin/delete-class-members")
+    public ResponseEntity<?> deleteClassMembers(@RequestParam Integer classId,
+                                                @RequestBody List<String> members) {
+        System.out.println(classId);
+        System.out.println(members.getFirst());
+        try {
+            facilityClassUserService.deleteClassMembers(members, classId);
+            return ResponseEntity.ok("Đã xóa thành công " + members.size() + " các thành viên trong lớp");
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
         }
     }
 }

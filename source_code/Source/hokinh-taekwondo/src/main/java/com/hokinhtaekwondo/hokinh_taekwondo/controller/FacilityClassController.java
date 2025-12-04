@@ -31,7 +31,7 @@ public class FacilityClassController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/create")
+    @PostMapping("/admin/create")
     public ResponseEntity<?> create(@Valid @RequestBody FacilityClassCreateDTO dto,
                                     BindingResult bindingResult,
                                     HttpSession session,
@@ -60,7 +60,7 @@ public class FacilityClassController {
         }
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
                                     @Valid @RequestBody FacilityClassUpdateDTO dto,
                                     BindingResult bindingResult,
@@ -97,7 +97,7 @@ public class FacilityClassController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Integer id,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
@@ -127,12 +127,12 @@ public class FacilityClassController {
         }
     }
 
-    @GetMapping("")
+    @GetMapping("/admin")
     public ResponseEntity<?> getFacilityClasses() {
         return ResponseEntity.status(HttpStatus.OK).body(facilityClassService.getAllFacilityClasses());
     }
 
-    @PutMapping("/update-classes-website-management")
+    @PutMapping("/admin/update-classes-website-management")
     public ResponseEntity<?> updateFacilityClassesWebsiteManagement(@Valid @RequestBody List<FacilityClassUpdateMultiDTO> classes,
                                                                     BindingResult bindingResult,
                                                                     HttpSession session,

@@ -17,9 +17,23 @@ public class EquipmentCreateDTO {
     @Size(max = 255, message = "Tên thiết bị không được vượt quá 255 ký tự")
     private String name;
 
-    @Size(max = 2000, message = "Mô tả không được vượt quá 2000 ký tự")
-    private String description;
+    @NotNull(message = "Số lượng thiết bị hoạt động tốt không được để trống")
+    private Integer goodQuantity;
 
-    @NotBlank(message = "Trạng thái thiết bị không được để trống")
-    private String status;
+    @NotNull(message = "Số lượng thiết bị cần sửa chữa không được để trống")
+    private Integer fixableQuantity;
+
+    @NotNull(message = "Số lượng thiết bị hư không được để trống")
+    private Integer damagedQuantity;
+
+    @Size(max = 2000, message = "Mô tả cho trạng thái tốt không được vượt quá 2000 ký tự")
+    private String goodDescription;
+
+    @Size(max = 2000, message = "Mô tả cho trạng thái cần sửa không được vượt quá 2000 ký tự")
+    private String fixableDescription;
+
+    @Size(max = 2000, message = "Mô tả cho trạng thái hư không được vượt quá 2000 ký tự")
+    private String damagedDescription;
+
+    private String unit;
 }

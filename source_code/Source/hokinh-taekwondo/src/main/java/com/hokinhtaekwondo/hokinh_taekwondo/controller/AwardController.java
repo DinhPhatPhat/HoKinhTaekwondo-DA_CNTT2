@@ -20,12 +20,12 @@ public class AwardController {
         return ResponseEntity.ok(awardService.getAllAwards());
     }
 
-    @GetMapping("/all_deleted_awards")
+    @GetMapping("/admin/all_deleted_awards")
     public ResponseEntity<?> getAllDeletedAwards() {
         return ResponseEntity.ok(awardService.getAllDeletedAwards());
     }
 
-    @PostMapping("/add")
+    @PostMapping("/admin/add")
     public ResponseEntity<?> addAward(@RequestBody Award award) {
         try {
             Award savedAward = awardService.createAward(award);
@@ -36,7 +36,7 @@ public class AwardController {
         }
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> updateAward(   @PathVariable Long id,
                                             @RequestBody Award award) {
         try {
@@ -48,7 +48,7 @@ public class AwardController {
         }
     }
 
-    @PatchMapping("/patch/{id}")
+    @PatchMapping("/admin/patch/{id}")
     public ResponseEntity<?> patchAward(   @PathVariable Long id,
                                            @RequestBody Map<String, Object> updatedFields) {
         try {
@@ -59,7 +59,7 @@ public class AwardController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<?> deleteAward(@PathVariable Long id) {
         try {
             Award deletedAward = awardService.delete(id);
@@ -70,7 +70,7 @@ public class AwardController {
         }
     }
 
-    @DeleteMapping("/delete_all")
+    @DeleteMapping("/admin/delete_all")
     public ResponseEntity<?> deletedAllAward() {
         try {
             awardService.deleteAll();

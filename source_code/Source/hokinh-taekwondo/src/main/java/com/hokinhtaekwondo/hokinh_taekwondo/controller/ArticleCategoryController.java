@@ -18,7 +18,7 @@ public class ArticleCategoryController {
     @Autowired
     private ArticleCategoryService articleCategoryService;
 
-    @GetMapping("/all-article-categories")
+    @GetMapping("/admin/all-article-categories")
     public ResponseEntity<?> getAllCategories() {
         try {
             List<ArticleCategory> categories = articleCategoryService.getAllCategories();
@@ -28,7 +28,7 @@ public class ArticleCategoryController {
         }
     }
 
-    @PostMapping("/add")
+    @PostMapping("/admin/add")
     public ResponseEntity<?> createCategory(@RequestBody ArticleCategory category) {
         try {
             ArticleCategory newCategory = articleCategoryService.createCategory(category);
@@ -38,7 +38,7 @@ public class ArticleCategoryController {
         }
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Integer id, @RequestBody ArticleCategory category) {
         try {
             ArticleCategory updatedCategory = articleCategoryService.updateCategory(id, category);
@@ -48,7 +48,7 @@ public class ArticleCategoryController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Integer id) {
         try {
             articleCategoryService.deleteCategory(id);

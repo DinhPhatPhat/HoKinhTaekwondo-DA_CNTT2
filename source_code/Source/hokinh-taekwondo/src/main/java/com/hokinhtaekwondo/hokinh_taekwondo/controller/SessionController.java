@@ -33,7 +33,7 @@ public class SessionController {
     private ValidateService validateService;
 
     // ================= BULK CREATE MULTI-DAY SESSION AND USER ==================
-    @PostMapping("/bulk-create-multi-day")
+    @PostMapping("/admin/bulk-create-multi-day")
     public ResponseEntity<?> bulkCreateSessionsAndUsers(
             @RequestParam Integer facilityClassId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -68,7 +68,7 @@ public class SessionController {
     }
 
     // ======== BULK UPDATE =========
-    @PutMapping("/bulk-update")
+    @PutMapping("/admin/bulk-update")
     public ResponseEntity<?> bulkUpdateSessions(
             @Valid @RequestBody SessionBulkUpdateDTO sessionBulkUpdateDTO,
             BindingResult bindingResult,
@@ -96,7 +96,7 @@ public class SessionController {
         }
     }
 
-    @GetMapping("/{facilityClassId}")
+    @GetMapping("/admin/{facilityClassId}")
     public ResponseEntity<?> getSessionsByFacilityClassIdAndDateRange(
             @PathVariable Integer facilityClassId,
             @RequestParam("startDate") LocalDate startDate,
@@ -125,7 +125,7 @@ public class SessionController {
     }
 
     // 1. GET sessions in range
-    @GetMapping("/session-management")
+    @GetMapping("/admin/session-user-data")
     public ResponseEntity<?> getSessions(
             @RequestParam String startDate,
             @RequestParam String endDate,
@@ -145,7 +145,7 @@ public class SessionController {
     }
 
     // 2. GET students in session
-    @GetMapping("/{sessionId}/students-management")
+    @GetMapping("/admin/{sessionId}/student-data")
     public ResponseEntity<?> getStudents(@PathVariable Integer sessionId) {
         try {
             return ResponseEntity.ok(sessionService.getStudentsOfSession(sessionId));
@@ -157,12 +157,13 @@ public class SessionController {
     }
 
     // 3. UPDATE session + session users
-    @PutMapping("/update-management")
+    @PutMapping("/admin/{id}")
     public ResponseEntity<?> update(
-            @RequestBody SessionAndUserUpdateDTO req
+            @RequestBody SessionAndUserUpdateDTO req,
+            @PathVariable Integer id
     ) {
         try {
-            return ResponseEntity.ok(sessionService.updateSession(req));
+            return ResponseEntity.ok(sessionService.updateSession(req, id));
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -170,10 +171,22 @@ public class SessionController {
         }
     }
 
-    @PostMapping("/create-management")
+    @PostMapping("/admin")
     public ResponseEntity<?> create(@RequestBody @Valid SessionAndUserCreateDTO req) {
         try {
             return ResponseEntity.ok(sessionService.createSession(req));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<?> delete(@PathVariable Integer id) {
+        try {
+            System.out.println("session " + id);
+            return ResponseEntity.ok(sessionService.deleteSession(id));
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

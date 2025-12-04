@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,7 +69,7 @@ public class ArticleService {
         article.setTitle(dto.getTitle());
         article.setContent(dto.getContent());
         article.setCoverImage(dto.getCoverImage());
-        article.setDate(dto.getDate() != null ? dto.getDate() : LocalDateTime.now());
+        article.setDate(dto.getDate() != null ? dto.getDate() : LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         article.setAuthor(dto.getAuthor());
         article.setCategory(dto.getCategory());
         article.setDeleted(dto.isDeleted());
@@ -132,7 +133,7 @@ public class ArticleService {
 
     // ----------- CREATE ARTICLE -----------
     public ArticleDTO createArticle(ArticleDTO articleDTO) {
-        articleDTO.setDate(LocalDateTime.now());
+        articleDTO.setDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         articleDTO.setDeleted(false);
 
         Article article = convertToEntity(articleDTO);
@@ -163,7 +164,7 @@ public class ArticleService {
         existingArticle.setAuthor(updatedArticle.getAuthor());
         existingArticle.setType(updatedArticle.getType());
         existingArticle.setCategory(updatedArticle.getCategory());
-        existingArticle.setDate(LocalDateTime.now());
+        existingArticle.setDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 
         Article saved = articleRepository.save(existingArticle);
         return convertToDTO(saved);
@@ -206,11 +207,11 @@ public class ArticleService {
             existingArticle.setCategory(updatedArticle.getCategory());
         }
         if (updatedArticle.getDate() != null) {
-            existingArticle.setDate(LocalDateTime.now());
+            existingArticle.setDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         }
         if(updatedArticle.isDeleted()) {
             existingArticle.setDeleted(true);
-            existingArticle.setDeletedAt(LocalDateTime.now());
+            existingArticle.setDeletedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         }
         else {
             existingArticle.setDeleted(false);

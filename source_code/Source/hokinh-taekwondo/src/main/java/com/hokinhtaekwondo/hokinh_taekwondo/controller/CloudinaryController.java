@@ -31,7 +31,7 @@ public class CloudinaryController {
     @Value("${cloudinary.api-secret}")
     private String apiSecret;
 
-    @PostMapping("/upload-signature")
+    @PostMapping("/admin/upload-signature")
     public ResponseEntity<?> getUploadSignature(@RequestBody Map<String, String> body) {
         String publicId = body.get("public_id");
         String folder = body.get("folder");
@@ -64,7 +64,7 @@ public class CloudinaryController {
         ));
     }
 
-    @PostMapping("/delete-signature")
+    @PostMapping("/admin/delete-signature")
     public ResponseEntity<?> getDeleteSignature(@RequestBody Map<String, String> body) {
         String publicId = body.get("public_id");
         long timestamp = System.currentTimeMillis() / 1000;
@@ -90,7 +90,7 @@ public class CloudinaryController {
         ));
     }
 
-    @PostMapping("/delete-images")
+    @PostMapping("/admin/delete-images")
     public ResponseEntity<?> deleteImages(@RequestBody List<String> publicIds) {
         try {
             var result = cloudinaryService.deleteImages(publicIds);

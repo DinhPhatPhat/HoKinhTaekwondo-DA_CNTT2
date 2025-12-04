@@ -25,11 +25,26 @@ public class Equipment {
     @Column(name = "name", length = 255, nullable = false)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "unit", length = 30, nullable = false)
+    private String unit;
 
     @Column
-    private String status;
+    private Integer damagedQuantity;
+
+    @Column
+    private Integer goodQuantity;
+
+    @Column
+    private Integer fixableQuantity;
+
+    @Column(columnDefinition = "TEXT")
+    private String damagedDescription;
+
+    @Column(columnDefinition = "TEXT")
+    private String goodDescription;
+
+    @Column(columnDefinition = "TEXT")
+    private String fixableDescription;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

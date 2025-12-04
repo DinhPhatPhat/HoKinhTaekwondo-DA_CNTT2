@@ -23,4 +23,6 @@ public interface FacilityClassUserRepository extends JpaRepository<FacilityClass
     @Query("SELECT fcu.facilityClass.id FROM FacilityClassUser fcu " +
             "WHERE fcu.userId = :userId AND fcu.isActive = true")
     Integer findActiveClassForUser(@Param("userId") String userId);
+
+    void deleteAllByFacilityClass_IdAndUserIdIn(Integer facilityClassId,  List<String> userIds);
 }

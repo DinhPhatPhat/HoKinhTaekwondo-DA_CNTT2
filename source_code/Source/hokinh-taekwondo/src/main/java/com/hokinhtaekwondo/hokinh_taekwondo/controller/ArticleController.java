@@ -26,7 +26,7 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getArticlesHomepage(page, size));
     }
 
-    @GetMapping("/all-articles-by-category")
+    @GetMapping("/admin/all-articles-by-category")
     public ResponseEntity<?> getAllArticlesByCategory(@RequestParam Integer categoryId) {
         try {
             List<ArticleDTO> articles = articleService.getAllArticlesByCategory(categoryId);
@@ -37,7 +37,7 @@ public class ArticleController {
         }
     }
 
-    @GetMapping("/all-deleted-articles")
+    @GetMapping("/admin/all-deleted-articles")
     public ResponseEntity<?> getAllDeletedArticles() {
         try {
             List<ArticleDTO> deletedArticles = articleService.getAllDeletedArticles();
@@ -48,7 +48,7 @@ public class ArticleController {
         }
     }
 
-    @PostMapping("/add")
+    @PostMapping("/admin/add")
     public ResponseEntity<?> createArticle(@RequestBody ArticleDTO article) {
         try {
             ArticleDTO savedArticle = articleService.createArticle(article);
@@ -59,7 +59,7 @@ public class ArticleController {
         }
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> updateArticle(@PathVariable Integer id, @RequestBody ArticleDTO article) {
         try {
             ArticleDTO updatedArticle = articleService.updateArticle(id, article);
@@ -70,7 +70,7 @@ public class ArticleController {
         }
     }
 
-    @PutMapping("/patch/{id}")
+    @PutMapping("/admin/patch/{id}")
     public ResponseEntity<?> patchArticle(@PathVariable Integer id, @RequestBody ArticleDTO article) {
         try {
             ArticleDTO patchedArticle = articleService.patchArticle(id, article);
@@ -81,7 +81,7 @@ public class ArticleController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/admin/delete/{id}")
     public ResponseEntity<?> deleteArticle(@PathVariable Integer id) {
         try {
             articleService.deleteArticle(id);

@@ -194,4 +194,9 @@ public class FacilityClassUserService {
         FacilityClass defaultFacilityClass = new FacilityClass();
         return Optional.ofNullable(facilityClassUser.getFacilityClass()).orElse(defaultFacilityClass).getId();
     }
+
+    @Transactional
+    public void deleteClassMembers(List<String> memIds, Integer classId) {
+        facilityClassUserRepository.deleteAllByFacilityClass_IdAndUserIdIn(classId, memIds);
+    }
 }

@@ -188,3 +188,43 @@ VALUES
     (1, 'u002', 'instructor', TRUE, NOW()),
     (1, 'u003', 'student', false, NOW()),
     (1, 'u006', 'student', TRUE, NOW());
+
+INSERT INTO equipments (
+    facility_id, name, unit, damaged_quantity, good_quantity, fixable_quantity,
+    damaged_description, good_description, fixable_description,
+    created_at, updated_at
+) VALUES
+-- 1
+(1, 'Thảm Taekwondo', 'tấm', 2, 18, 3,
+ 'Một số thảm bị rách do sử dụng lâu ngày.',
+ 'Phần lớn thảm vẫn còn tốt và sạch sẽ.',
+ 'Một vài tấm có thể khâu lại để sử dụng tiếp.',
+ '2025-12-02 10:00:00', '2025-12-02 10:00:00'),
+
+-- 2
+(2, 'Đệm đá (Kick Pad)', 'bộ', 1, 25, 2,
+ 'Một đệm bị rách ở mép.',
+ 'Hầu hết đệm vẫn còn chắc chắn và dùng tốt.',
+ 'Một số đệm có thể khâu lại để tiết kiệm chi phí.',
+ '2025-12-02 10:05:00', '2025-12-02 10:05:00'),
+
+-- 3
+(3, 'Giáp ngực', 'cái', 0, 30, 1,
+ NULL,
+ 'Toàn bộ giáp đang trong tình trạng tốt.',
+ 'Có một giáp bị trầy nhẹ nhưng có thể sửa lại.',
+ '2025-12-02 10:10:00', '2025-12-02 10:10:00'),
+
+-- 4
+(1, 'Mũ bảo hộ', 'cái', 3, 15, 2,
+ 'Một số mũ có lớp đệm bị mòn.',
+ 'Hầu hết mũ bảo hộ vẫn an toàn khi sử dụng.',
+ 'Hai cái có thể thay lớp đệm bên trong.',
+ '2025-12-02 10:15:00', '2025-12-02 10:15:00'),
+
+-- 5
+(2, 'Miếng tập đá (Target)', 'cái', 4, 12, 3,
+ 'Một số miếng bị nứt phần mặt ngoài.',
+ 'Các miếng còn lại vẫn dùng rất tốt.',
+ 'Một vài miếng có thể dán lại để sử dụng tiếp.',
+ '2025-12-02 10:20:00', '2025-12-02 10:20:00');
