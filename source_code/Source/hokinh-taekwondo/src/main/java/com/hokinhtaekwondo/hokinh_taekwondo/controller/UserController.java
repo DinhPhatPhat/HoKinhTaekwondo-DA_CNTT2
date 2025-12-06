@@ -279,6 +279,7 @@ public class UserController {
 
         try {
             List<User> createdUsers = userService.createMembersForClass(userList);
+            createdUsers.forEach(u -> u.setPassword(""));
             return ResponseEntity.status(HttpStatus.CREATED).body(createdUsers);
         } catch (DuplicateUsersException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e);

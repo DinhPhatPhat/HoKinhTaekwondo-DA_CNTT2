@@ -12,10 +12,15 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,12 +36,35 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final FacilityRepository facilityRepository;
     private final FacilityClassUserService facilityClassUserService;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(userId));
+        return org.springframework.security.core.userdetails.User
+                .withUsername(userId)
+                .password(user.getPassword())
+                .roles(getRoleName(user.getRole()))
+                .disabled(!user.getIsActive())
+                .build();
+    }
+
+    private String getRoleName(Integer role) {
+        return switch (role) {
+            case 0 -> "CLUB_HEAD";
+            case 1 -> "MANAGER";
+            case 2 -> "COACH";
+            case 3 -> "INSTRUCTOR";
+            case 4 -> "STUDENT";
+            default -> "UNKNOWN";
+        };
+    }
 
     // --- Create ---
     public UserInClassResponseDTO create(UserCreateDTO dto) {
@@ -46,9 +74,10 @@ public class UserService {
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setDateOfBirth(dto.getDateOfBirth());
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword()); // TODO: mã hóa password sau
+        user.setPassword(passwordEncoder.encode(dto.getPassword())); // TODO: mã hóa password sau
         user.setRole(dto.getRole());
         user.setBeltLevel(dto.getBeltLevel());
+        user.setLoginPin(0);
 
         user.setFacility(facilityRepository.findById(dto.getFacilityId()).orElse(null));
         User saved = userRepository.save(user);
@@ -80,7 +109,7 @@ public class UserService {
         }
 
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-            user.setPassword(dto.getPassword()); // TODO: mã hoá
+            user.setPassword(passwordEncoder.encode(dto.getPassword())); // TODO: mã hoá
         }
 
         if (dto.getRole() != null) {
@@ -236,7 +265,8 @@ public class UserService {
             user.setRole(dto.getRole());
             user.setBeltLevel(dto.getBeltLevel());
             user.setIsActive(true);
-            user.setPassword(dto.getPassword());
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            user.setLoginPin(0);
             System.out.println(dto.getPassword());
 
             // --- Liên kết cơ sở (Facility) ---
@@ -295,7 +325,10 @@ public class UserService {
             user.setRole(dto.getRole());
             user.setBeltLevel(dto.getBeltLevel());
             user.setIsActive(true);
-            user.setPassword(dto.getPassword());
+            user.setLoginPin(0);
+            user.setPassword(passwordEncoder.encode("12345678"));
+            System.out.println(user.getPassword());
+
 
             // --- Liên kết cơ sở (Facility) ---
             if (dto.getFacilityId() != null) {
@@ -320,7 +353,7 @@ public class UserService {
         facilityClassUserBulkCreateDTO.setFacilityClassId(userList.getFirst().getClassId());
         facilityClassUserBulkCreateDTO.setUsers(usersInClass);
 
-        List<User> savedUsers = null;
+        List<User> savedUsers = new ArrayList<>();
         // --- Lưu tất cả trong cùng Transaction ---
         try {
             savedUsers = userRepository.saveAll(usersToSave);
@@ -335,9 +368,6 @@ public class UserService {
         catch (Exception e) {
             System.out.println("In Class: " + e.getMessage());
         }
-
-        // --- Xóa mật khẩu khi trả về ---
-        savedUsers.forEach(u -> u.setPassword(""));
 
         return savedUsers;
     }
@@ -388,7 +418,7 @@ public class UserService {
             }
 
             if (StringUtils.hasText(dto.getPassword())) {
-                user.setPassword(dto.getPassword());
+                user.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
             // Nếu có facilityId mới

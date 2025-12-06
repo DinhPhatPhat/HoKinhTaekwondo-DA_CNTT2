@@ -54,4 +54,7 @@ public class User {
     @JoinColumn(name = "facility_id", referencedColumnName = "id")
     @JsonBackReference
     private Facility facility;
+
+    @Column
+    private Integer loginPin;
 }
