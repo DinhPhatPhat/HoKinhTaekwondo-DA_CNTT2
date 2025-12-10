@@ -6,6 +6,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdat
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class FacilityService {
 
     private final FacilityRepository facilityRepository;
+    private final FacilityClassUserRepository facilityClassUserRepository;
     private final UserRepository userRepository;
 
     // --- Create ---
@@ -35,7 +37,7 @@ public class FacilityService {
         facility.setImage(dto.getImage());
         facility.setLatitude(dto.getLatitude());
         facility.setLongitude(dto.getLongitude());
-        facility.setIsActive(dto.isActive());
+        facility.setIsActive(dto.getIsActive());
         facility.setCreatedAt(LocalDateTime.now());
 
         // Gắn manager nếu có
@@ -122,7 +124,6 @@ public class FacilityService {
     }
 
     public List<FacilityManagementDTO> getAllFacilitiesForManagement() {
-        // TODO: Set studentCount
         return facilityRepository.findAll()
                 .stream()
                 .map(this::toFacilityManagementDTO)
@@ -226,7 +227,7 @@ public class FacilityService {
                 facilityClassGeneralInfo.setDaysOfWeek(facilityClass.getDaysOfWeek());
                 facilityClassGeneralInfo.setLatestSession(facilityClass.getLatestSession());
                 facilityClassGeneralInfo.setSessionsUpdatedAt(facilityClass.getSessionsUpdatedAt());
-
+                facilityClassGeneralInfo.setStudentCount(facilityClassUserRepository.countByFacilityClass_Id(facilityClass.getId()));
                 classes.add(facilityClassGeneralInfo);
             }
         }

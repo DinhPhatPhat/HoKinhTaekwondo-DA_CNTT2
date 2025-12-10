@@ -9,9 +9,11 @@ import com.hokinhtaekwondo.hokinh_taekwondo.service.ValidateService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -187,6 +189,32 @@ public class SessionController {
         try {
             System.out.println("session " + id);
             return ResponseEntity.ok(sessionService.deleteSession(id));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/instructor/session-user-data")
+    public ResponseEntity<?> getInstructorSessions(@AuthenticationPrincipal User currentUser,
+                                                   @RequestParam String startDate,
+                                                   @RequestParam String endDate) {
+        try {
+            return ResponseEntity.ok(sessionService.getInstructorSessions(LocalDate.parse(startDate), LocalDate.parse(endDate), currentUser.getId()));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/report-session")
+    public ResponseEntity<?> reportSession(@AuthenticationPrincipal User instructor,
+                                           @RequestBody InstructorSessionUpdateDTO updatedSession) {
+        try {
+            sessionService.reportSession(updatedSession, instructor.getId());
+            return ResponseEntity.ok("Báo cáo buổi học thành công");
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

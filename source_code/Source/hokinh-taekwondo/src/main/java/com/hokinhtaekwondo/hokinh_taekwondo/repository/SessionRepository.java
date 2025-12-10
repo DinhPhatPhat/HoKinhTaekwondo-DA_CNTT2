@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.repository;
 
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.InstructorSessionInfo;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
 import jakarta.validation.constraints.NotNull;
@@ -35,6 +36,20 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
             @Param("endDate") LocalDate endDate
     );
     void deleteAllByIdIn(List<Integer> ids);
-
+    // Avoid call with many sessions
+    @Query("""
+        SELECT s, su
+        FROM Session s
+        JOIN FETCH s.facilityClass fc
+        JOIN FETCH fc.facility fac
+        JOIN SessionUser su ON su.sessionId = s.id
+        WHERE su.userId = :userId
+          AND s.date BETWEEN :startDate AND :endDate
+    """)
+    List<InstructorSessionInfo> findAllSessionsForInstructorByUserIdAndDateRange(
+            @Param("userId") String userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
 }

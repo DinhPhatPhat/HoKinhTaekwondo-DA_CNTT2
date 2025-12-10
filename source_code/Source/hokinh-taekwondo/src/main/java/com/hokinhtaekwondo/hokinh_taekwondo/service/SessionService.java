@@ -1,23 +1,21 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentAttendanceDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.FullSessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.SessionUserDTO;
-import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
-import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
-import com.hokinhtaekwondo.hokinh_taekwondo.model.SessionUser;
-import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.ConflictException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -29,6 +27,7 @@ public class SessionService {
     private final SessionUserRepository sessionUserRepository;
     private final UserRepository userRepository;
     private final FacilityClassUserRepository facilityClassUserRepository;
+    private final SessionUserService sessionUserService;
 
     // ================= BULK CREATE ==================
     @Transactional
@@ -338,6 +337,78 @@ public class SessionService {
         sessionUserRepository.deleteAllBySessionId(sessionId);
         sessionRepository.deleteById(sessionId);
         return deletedSession;
+    }
+
+    public List<InstructorSessionDTO> getInstructorSessions(LocalDate start, LocalDate end, String instructorId) {
+        List<InstructorSessionInfo> instructorSessions = sessionRepository.findAllSessionsForInstructorByUserIdAndDateRange(instructorId, start, end);
+        List<InstructorSessionDTO> result = new ArrayList<>();
+        HashMap<Integer, Facility> facilities = new HashMap<>();
+        for (InstructorSessionInfo session : instructorSessions) {
+            Facility facility = session.session().getFacilityClass().getFacility();
+            facilities.putIfAbsent(facility.getId(), facility);
+            result.add(toInstructorSessionDTO(session.session(),
+                                    session.sessionUser(),
+                                    session.session().getFacilityClass(),
+                                    facilities.get(facility.getId())
+            ));
+        }
+        return result;
+    }
+
+    @Transactional
+    public void reportSession(InstructorSessionUpdateDTO session, String instructorId) throws Exception {
+        // 1. Check existence of instructor in session
+        SessionUser currentRole = sessionUserRepository
+                .findBySessionIdAndUserId(session.getId(), instructorId);
+        if(currentRole == null) {
+            throw new Exception("Bạn không thuộc buổi học này!");
+        }
+
+        // 2. Check the role
+        if (!currentRole.getRoleInSession().equals("leader") &&
+                !currentRole.getRoleInSession().equals("assistant")) {
+            throw new Exception("Bạn không có quyền điểm danh!");
+        }
+        if(!currentRole.getAttended()) {
+            throw new Exception("Bạn cần check in thành công để có thể báo cáo thông tin buổi học!");
+        }
+
+        Session updatedSession = sessionRepository.findById(session.getId())
+                .orElseThrow(
+                        () -> new RuntimeException("Không tìm thấy buổi học có id " +  session.getId())
+                );
+        // 3. Update session report
+        updatedSession.setReport(session.getReport());
+        updatedSession.setTopic(session.getTopic());
+        updatedSession.setVideoLink(session.getVideoLink());
+        // 4. Update status of students in session
+        sessionUserService.reportStudents(session.getStudents(), session.getId());
+    }
+
+    private InstructorSessionDTO toInstructorSessionDTO(Session session, SessionUser su, FacilityClass facilityClass, Facility facility) {
+        InstructorSessionDTO dto = new InstructorSessionDTO();
+        // Attendance status of instructor
+        dto.setAttended(su.getAttended());
+        dto.setRole(su.getRoleInSession());
+
+        // Info of session
+        dto.setId(session.getId());
+        dto.setDate(session.getDate());
+        dto.setStatus(session.getStatus());
+        dto.setStartTime(session.getStartTime());
+        dto.setEndTime(session.getEndTime());
+        dto.setReport(session.getReport());
+        dto.setTopic(session.getTopic());
+        dto.setVideoLink(session.getVideoLink());
+
+        // Class name
+        dto.setClassName(facilityClass.getName());
+
+        // Facility info
+        dto.setFacilityName(facility.getName());
+        dto.setFacilityAddress(facility.getAddress());
+        dto.setFacilityMapsLink(facility.getMapsLink());
+        return dto;
     }
 
     private FullSessionUserDTO toDTO(SessionUser su) {

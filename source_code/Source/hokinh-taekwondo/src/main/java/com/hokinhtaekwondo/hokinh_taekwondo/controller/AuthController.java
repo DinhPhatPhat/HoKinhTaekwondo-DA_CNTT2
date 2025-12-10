@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
+import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/logout-all")
-    public ResponseEntity<?> logoutAll(@AuthenticationPrincipal UserDetails user) {
+    public ResponseEntity<?> logoutAll(@AuthenticationPrincipal User user) {
         // GET ROLE(S)
         Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
 
@@ -33,7 +34,7 @@ public class AuthController {
                 .orElse("ROLE_UNKNOWN");
 
         try {
-            authService.logoutAll(user.getUsername());
+            authService.logoutAll(user);
             return ResponseEntity.ok("Đăng xuất thành công ở tất cả thiết bị");
         }
         catch (Exception e) {

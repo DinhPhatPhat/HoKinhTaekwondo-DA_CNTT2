@@ -44,7 +44,7 @@ public class Facility {
     @JoinColumn(name = "manager_user_id", referencedColumnName = "id")
     private User manager;
 
-    @Column(name = "maps_link")
+    @Column(name = "maps_link", length = 1000)
     private String mapsLink;
 
     @Column(precision = 10, scale = 7)

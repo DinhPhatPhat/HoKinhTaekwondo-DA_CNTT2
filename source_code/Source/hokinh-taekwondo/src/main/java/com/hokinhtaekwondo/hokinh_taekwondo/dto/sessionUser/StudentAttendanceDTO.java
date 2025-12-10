@@ -7,11 +7,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class StudentAttendanceDTO {
-
-    @NotNull(message = "Buổi học không được để trống")
-    private Integer sessionId;
-    @NotNull(message = "Học sinh không được để trống")
+    @NotNull(message = "Mã võ sinh không được để trống")
     private String studentId;
-    @NotNull(message = "Tráng thái điểm danh không được để trống")
+    private String studentName;
+    private String review;
+    @NotNull(message = "Trạng thái điểm danh không được để trống")
     private Boolean attended;
 }

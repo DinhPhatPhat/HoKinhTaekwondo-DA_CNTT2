@@ -7,6 +7,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.Equipment;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.EquipmentRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -26,6 +27,7 @@ public class EquipmentService {
 
     // **AUTHENTICATION
     // --- Create ---
+    @Transactional
     public EquipmentDTO createEquipment(EquipmentCreateDTO dto) {
         Equipment equipment = new Equipment();
         equipment.setName(dto.getName());
@@ -48,6 +50,7 @@ public class EquipmentService {
     }
 
     // **AUTHENTICATION
+    @Transactional
     public void updateEquipments(List<EquipmentUpdateDTO> equipments) {
         for (EquipmentUpdateDTO equipmentDTO : equipments) {
             updateEquipment(equipmentDTO);

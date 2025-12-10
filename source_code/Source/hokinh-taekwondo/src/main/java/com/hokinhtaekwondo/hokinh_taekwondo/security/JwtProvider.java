@@ -7,9 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -20,19 +18,13 @@ import java.util.Date;
 public class JwtProvider {
     @Value("${app.secretkey}")
     private String SECRET_KEY;
-    @Autowired
-    private RedisTemplate<String, Integer> redisTemplate;
     private final UserRepository userRepository;
 
     // Generate a JWT token using userId as the subject
     public String generateToken(String userId) {
         SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-        Integer loginPin = redisTemplate.opsForValue().get("loginPin:" + userId);
-        if(loginPin == null) {
-            User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với id: " + userId));
-            loginPin = user.getLoginPin();
-            redisTemplate.opsForValue().set("loginPin:" + userId, loginPin);
-        }
+        Integer loginPin = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng với id: " + userId)).getLoginPin();
+
         return Jwts.builder()
                 .subject(userId)
                 .issuedAt(new Date())

@@ -45,25 +45,8 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(userId));
-        return org.springframework.security.core.userdetails.User
-                .withUsername(userId)
-                .password(user.getPassword())
-                .roles(getRoleName(user.getRole()))
-                .disabled(!user.getIsActive())
-                .build();
-    }
-
-    private String getRoleName(Integer role) {
-        return switch (role) {
-            case 0 -> "CLUB_HEAD";
-            case 1 -> "MANAGER";
-            case 2 -> "COACH";
-            case 3 -> "INSTRUCTOR";
-            case 4 -> "STUDENT";
-            default -> "UNKNOWN";
-        };
+    public User loadUserByUsername(String userId) throws UsernameNotFoundException {
+        return userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(userId));
     }
 
     // --- Create ---

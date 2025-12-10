@@ -25,4 +25,6 @@ public interface FacilityClassUserRepository extends JpaRepository<FacilityClass
     Integer findActiveClassForUser(@Param("userId") String userId);
 
     void deleteAllByFacilityClass_IdAndUserIdIn(Integer facilityClassId,  List<String> userIds);
+
+    Integer countByFacilityClass_Id(Integer classId);
 }

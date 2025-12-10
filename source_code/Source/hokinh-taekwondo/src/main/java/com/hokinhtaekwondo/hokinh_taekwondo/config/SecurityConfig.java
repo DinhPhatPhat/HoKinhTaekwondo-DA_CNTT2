@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/*/homepage").permitAll()
                         .requestMatchers("/api/*/admin/**").hasAnyRole("CLUB_HEAD", "MANAGER")
+                        .requestMatchers("/api/*/instructor/**").hasAnyRole("COACH", "INSTRUCTOR")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -70,9 +71,9 @@ public class SecurityConfig {
     @Bean
     public JwtAuthorizationFilter jwtAuthorizationFilter(
             JwtProvider jwtProvider,
-            UserService userDetailsService
+            UserService userService
     ) {
-        return new JwtAuthorizationFilter(jwtProvider, userDetailsService);
+        return new JwtAuthorizationFilter(jwtProvider, userService);
     }
 
 }

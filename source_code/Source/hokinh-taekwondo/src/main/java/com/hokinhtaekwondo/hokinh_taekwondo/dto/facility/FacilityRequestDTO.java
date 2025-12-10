@@ -41,5 +41,5 @@ public class FacilityRequestDTO {
     @DecimalMax(value = "90.0", message = "Vĩ độ phải từ -90 đến 90")
     private BigDecimal latitude;
 
-    private boolean isActive;
+    private Boolean isActive;
 }
