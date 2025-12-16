@@ -32,6 +32,9 @@ public class User implements UserDetails {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
+    @Column(name = "address")
+    private String address;
+
     @Column(length = 100)
     private String email;
 

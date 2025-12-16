@@ -1,6 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.CheckinRequestDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.CheckinResponseDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentAttendanceDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentReviewDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.*;
@@ -30,7 +31,7 @@ public class SessionUserController {
     public ResponseEntity<?> checkin(@RequestBody CheckinRequestDTO dto,
                                      @AuthenticationPrincipal User user) throws Exception {
         try {
-            String result = sessionUserService.checkin(user.getId(), dto);
+            CheckinResponseDTO result = sessionUserService.checkin(user.getId(), dto);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(e.getMessage());

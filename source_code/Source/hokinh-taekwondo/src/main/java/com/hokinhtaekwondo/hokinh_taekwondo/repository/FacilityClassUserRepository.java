@@ -1,5 +1,6 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.repository;
 
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClassUser.ClassOfStudent;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClassUser;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,4 +28,18 @@ public interface FacilityClassUserRepository extends JpaRepository<FacilityClass
     void deleteAllByFacilityClass_IdAndUserIdIn(Integer facilityClassId,  List<String> userIds);
 
     Integer countByFacilityClass_Id(Integer classId);
+
+    @Query("""
+        SELECT new com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClassUser.ClassOfStudent(
+            fcu.facilityClass.id,
+            fcu.userId,
+            fcu.isActive
+        )
+        FROM FacilityClassUser fcu
+        WHERE fcu.userId IN :studentIds
+          AND fcu.roleInClass = 'student'
+    """)
+    List<ClassOfStudent> findClassesOfStudents(
+            @Param("studentIds") List<String> studentIds
+    );
 }

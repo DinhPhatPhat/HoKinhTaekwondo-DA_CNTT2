@@ -7,7 +7,13 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "session_users")
+@Table(
+        name = "session_users",
+        indexes = {
+                @Index(name = "idx_session_id", columnList = "session_id"),
+                @Index(name = "idx_user_id", columnList = "user_id")
+        }
+)
 @Getter
 @Setter
 public class  SessionUser {
@@ -24,7 +30,7 @@ public class  SessionUser {
     @Column(name = "user_id", nullable = false, length = 100)
     private String userId;
 
-    // Role of this user in the session (leader, assistant, student)
+    // Role of this user in the session (leader, assistant, student, off)
     @Column(name = "role_in_session", length = 50)
     private String roleInSession;
 

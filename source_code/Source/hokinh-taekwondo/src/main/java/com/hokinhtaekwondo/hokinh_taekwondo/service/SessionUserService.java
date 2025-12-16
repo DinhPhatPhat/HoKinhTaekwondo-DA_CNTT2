@@ -1,6 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.CheckinRequestDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.CheckinResponseDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentAttendanceDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentReviewDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.*;
@@ -26,7 +27,7 @@ public class SessionUserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public String checkin(String userId, CheckinRequestDTO dto) {
+    public CheckinResponseDTO checkin(String userId, CheckinRequestDTO dto) {
 
         SessionUser sessionUser = sessionUserRepository
                 .findBySessionIdAndUserId(dto.getSessionId(), userId);
@@ -50,8 +51,10 @@ public class SessionUserService {
         sessionUser.setAttended(true);
         sessionUser.setCheckinTime(LocalDateTime.now());
         sessionUserRepository.save(sessionUser);
-
-        return "Check-in thành công tại khoảng cách " + Math.round(distance) + "m.";
+        CheckinResponseDTO checkinResponseDTO = new CheckinResponseDTO();
+        checkinResponseDTO.setMessage("Check-in thành công tại khoảng cách " + Math.round(distance) + "m.");
+        checkinResponseDTO.setCheckinTime(sessionUser.getCheckinTime());
+        return checkinResponseDTO;
     }
 
     private double haversine(double lat1, double lon1, BigDecimal lat2, BigDecimal lon2) {

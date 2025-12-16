@@ -1,7 +1,9 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClassUser.ClassOfStudent;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentAttendanceDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.FullSessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.SessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.*;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -385,11 +388,88 @@ public class SessionService {
         sessionUserService.reportStudents(session.getStudents(), session.getId());
     }
 
+    public SessionStatistics getInstructorSessionAttendancesStatistics(Integer facilityId, LocalDate start, LocalDate end) {
+        if(end.isBefore(LocalDate.now())) {
+            throw new RuntimeException("Thời điểm thống kê không phù hợp");
+        }
+
+//        if(Math.abs(ChronoUnit.DAYS.between(start, end)) > 365) {
+//            throw new RuntimeException("Khoảng thời gian phải dưới 365 ngày");
+//        }
+
+        List<InstructorSessionStatistics> instructorSessionStatistics = new ArrayList<>();
+        List<StudentAttendanceStatistics> studentAttendanceList = new ArrayList<>();
+        HashMap<String, Integer> mapInstructorId = new HashMap<>();
+        HashMap<String, Integer> mapStudentId = new HashMap<>();
+        List<SessionAttendanceDTO> sessionData = sessionRepository.findAllSessionsForInstructorsByFacilityId(facilityId,  start, end);
+        for(SessionAttendanceDTO dto : sessionData) {
+            String userId = dto.getUserId();
+            if(dto.getRoleInSession().equals("student")) {
+                if(!mapStudentId.containsKey(userId)) {
+                    mapStudentId.put(userId, studentAttendanceList.size());
+                    StudentAttendanceStatistics sessionStatistics = new StudentAttendanceStatistics();
+                    sessionStatistics.setUserId(userId);
+                    sessionStatistics.setStudentName(dto.getUserName());
+                    studentAttendanceList.add(sessionStatistics);
+                }
+                if(dto.getAttended()) {
+                    Integer currentNumAttended = studentAttendanceList.get(mapStudentId.get(dto.getUserId())).getNumAttendedSession();
+                    studentAttendanceList.get(mapStudentId.get(dto.getUserId())).setNumAttendedSession(currentNumAttended + 1);
+                }
+                else {
+                    Integer currentNumAbsent = studentAttendanceList.get(mapStudentId.get(dto.getUserId())).getNumAbsentSession();
+                    studentAttendanceList.get(mapStudentId.get(dto.getUserId())).setNumAbsentSession(currentNumAbsent + 1);
+                }
+            }
+            else {
+                if(!mapInstructorId.containsKey(userId)) {
+                    mapInstructorId.put(userId, instructorSessionStatistics.size());
+                    InstructorSessionStatistics sessionStatistics = new InstructorSessionStatistics();
+                    sessionStatistics.setUserId(userId);
+                    sessionStatistics.setUserName(dto.getUserName());
+                    instructorSessionStatistics.add(sessionStatistics);
+                }
+                if(dto.getRoleInSession().equals("off") || !dto.getAttended()) {
+                    AbsentSession absentSession = new AbsentSession();
+                    absentSession.setRoleInSession(dto.getRoleInSession());
+                    absentSession.setDate(dto.getDate());
+                    absentSession.setClassId(dto.getFacilityClassId());
+                    absentSession.setFacilityId(dto.getFacilityId());
+                    instructorSessionStatistics.get(mapInstructorId.get(userId)).getAbsentSessions().add(absentSession);
+                }
+                else {
+                    PresentSession presentSession = new PresentSession();
+                    presentSession.setClassId(dto.getFacilityClassId());
+                    presentSession.setDate(dto.getDate());
+                    long lateMinutes = dto.getCheckinDelay() == null
+                            ? 0
+                            : dto.getCheckinDelay().toMinutes();
+                    presentSession.setLateMinutes(lateMinutes);
+                    presentSession.setRoleInSession(dto.getRoleInSession());
+                    presentSession.setFacilityId(dto.getFacilityId());
+                    instructorSessionStatistics.get(mapInstructorId.get(userId)).getPresentSessions().add(presentSession);
+                }
+            }
+        }
+        List<String> classIdsOfStudents = mapStudentId.keySet().stream().toList();
+        List<ClassOfStudent>  classOfStudents = facilityClassUserRepository.findClassesOfStudents(classIdsOfStudents);
+        for(ClassOfStudent classOfStudent : classOfStudents) {
+            Integer index = mapStudentId.get(classOfStudent.getStudentId());
+            studentAttendanceList.get(index).setClassId(classOfStudent.getClassId());
+            studentAttendanceList.get(index).setIsActive(classOfStudent.getIsActive());
+        }
+        SessionStatistics result = new SessionStatistics();
+        result.setInstructorSessionStatistics(instructorSessionStatistics);
+        result.setStudentAttendanceList(studentAttendanceList);
+        return result;
+    }
+
     private InstructorSessionDTO toInstructorSessionDTO(Session session, SessionUser su, FacilityClass facilityClass, Facility facility) {
         InstructorSessionDTO dto = new InstructorSessionDTO();
         // Attendance status of instructor
         dto.setAttended(su.getAttended());
         dto.setRole(su.getRoleInSession());
+        dto.setCheckinTime(su.getCheckinTime());
 
         // Info of session
         dto.setId(session.getId());

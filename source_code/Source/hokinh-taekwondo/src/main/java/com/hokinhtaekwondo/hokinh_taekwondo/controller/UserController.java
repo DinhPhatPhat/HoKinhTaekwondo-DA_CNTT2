@@ -1,9 +1,11 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.imports.UserImportResult;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.JwtService;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.export.UserImportErrorFileGenerator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -11,13 +13,16 @@ import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.ValidateService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
@@ -289,5 +294,28 @@ public class UserController {
                     .body("Lỗi hệ thống khi tạo người dùng: " + e.getMessage());
         }
     }
+
+    @PostMapping("/admin/import")
+    public ResponseEntity<?> importUsers(@RequestParam MultipartFile file,
+                                         @RequestParam String type,
+                                         @RequestParam Integer classId) {
+
+        UserImportResult result = userService.importUsers(file, type, classId);
+
+        if (!result.hasErrors()) {
+            return ResponseEntity.ok(result);
+        }
+
+        byte[] errorFile = UserImportErrorFileGenerator.generate(result);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=users-import-errors.xlsx")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ))
+                .body(errorFile);
+    }
+
 
 }

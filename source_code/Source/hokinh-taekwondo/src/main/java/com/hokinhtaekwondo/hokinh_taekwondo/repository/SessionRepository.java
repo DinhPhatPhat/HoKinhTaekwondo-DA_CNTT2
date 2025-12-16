@@ -1,6 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.repository;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.InstructorSessionInfo;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAttendanceDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
 import jakarta.validation.constraints.NotNull;
@@ -36,7 +37,7 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
             @Param("endDate") LocalDate endDate
     );
     void deleteAllByIdIn(List<Integer> ids);
-    // Avoid call with many sessions
+
     @Query("""
         SELECT s, su
         FROM Session s
@@ -48,6 +49,32 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
     """)
     List<InstructorSessionInfo> findAllSessionsForInstructorByUserIdAndDateRange(
             @Param("userId") String userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+        SELECT new com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAttendanceDTO(
+            su.userId,
+            su.roleInSession,
+            u.name,
+            s.date,
+            s.startTime,
+            su.checkinTime,
+            su.attended,
+            f.id,
+            fc.id
+        )
+        FROM Session s
+        JOIN s.facilityClass fc
+        JOIN fc.facility f
+        JOIN SessionUser su ON su.sessionId = s.id
+        JOIN User u ON u.id = su.userId
+        WHERE s.status = 0 AND u.isActive = true AND f.id = :facilityId
+          AND s.date BETWEEN :startDate AND :endDate
+    """)
+    List<SessionAttendanceDTO> findAllSessionsForInstructorsByFacilityId(
+            @Param("facilityId") Integer facilityId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );

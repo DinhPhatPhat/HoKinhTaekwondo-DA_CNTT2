@@ -3,8 +3,14 @@ package com.hokinhtaekwondo.hokinh_taekwondo.service;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClassUser.FacilityClassUserBulkCreateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClassUser.UserInClassDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.imports.UserImportResult;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.imports.UserImportRowResult;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClassUser;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
@@ -12,12 +18,12 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,8 +32,11 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,9 +47,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
+    private static final int COL_MA_VO_SINH = 0;
+    private static final int COL_HO_TEN = 1;
+    private static final int COL_NGAY_SINH = 2;
+    private static final int COL_CAP_DAI = 3;
+    private static final int COL_DIA_CHI = 4;
+    private static final int COL_SDT = 5;
+
+
     private final UserRepository userRepository;
     private final FacilityRepository facilityRepository;
     private final FacilityClassUserService facilityClassUserService;
+    private final FacilityClassUserRepository facilityClassUserRepository;
+    private final FacilityClassRepository facilityClassRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
@@ -414,6 +433,145 @@ public class UserService implements UserDetailsService {
             userRepository.save(user);
         }
     }
+
+    public UserImportResult importUsers(MultipartFile file, String type, Integer classId) {
+        Integer roleType = 4;
+        if(type.equals("instructor")) {
+            roleType = 3;
+        }
+        else if(type.equals("coach")) {
+            roleType = 2;
+        }
+        FacilityClass facilityClass = facilityClassRepository.findById(classId).orElseThrow(() -> new RuntimeException("Không tìm thấy lớp với id là " + classId));
+        List<UserImportRowResult> results = new ArrayList<>();
+
+        try (Workbook wb = new XSSFWorkbook(file.getInputStream())) {
+
+            Sheet sheet = wb.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                String userId = get(row, COL_MA_VO_SINH);
+                String fullName = get(row, COL_HO_TEN);
+                LocalDate dateOfBirth = getDate(row, COL_NGAY_SINH);
+                String beltLevel = get(row, COL_CAP_DAI);
+                String address = get(row, COL_DIA_CHI);
+                String phoneNumber = get(row, COL_SDT);
+
+                try {
+                    validate(userId, fullName, dateOfBirth, beltLevel, phoneNumber);
+
+                    if(userRepository.existsById(userId)) {
+                        throw new IllegalArgumentException("Mã người dùng đã tồn tại trên hệ");
+                    }
+                    // create new user
+                    User user = new User();
+                    user.setId(userId);
+                    user.setName(fullName);
+                    user.setPhoneNumber(phoneNumber);
+                    user.setDateOfBirth(dateOfBirth);
+                    user.setBeltLevel(beltLevel);
+                    user.setAddress(address);
+                    user.setRole(roleType);
+                    userRepository.save(user);
+                    // add to class
+                    FacilityClassUser facilityClassUser = new FacilityClassUser();
+                    facilityClassUser.setUserId(userId);
+                    facilityClassUser.setFacilityClass(facilityClass);
+                    facilityClassUser.setRoleInClass(type);
+                    facilityClassUser.setIsActive(true);
+                    facilityClassUser.setCreatedAt(LocalDateTime.now());
+                    facilityClassUserRepository.save(facilityClassUser);
+                    // add to result
+                    results.add(new UserImportRowResult(
+                            i + 1, userId, fullName, dateOfBirth, beltLevel, address, phoneNumber, null
+                    ));
+
+                } catch (Exception ex) {
+                    results.add(new UserImportRowResult(
+                            i + 1, userId, fullName, dateOfBirth, beltLevel, address, phoneNumber, ex.getMessage()
+                    ));
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Không đọc được file excel. Lỗi: ", e);
+        }
+
+        return new UserImportResult(results);
+    }
+
+    private LocalDate getDate(Row row, int index) {
+        Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        if (cell == null) return null;
+
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return cell.getLocalDateTimeCellValue().toLocalDate();
+        }
+
+        if (cell.getCellType() == CellType.STRING) {
+            String value = cell.getStringCellValue().trim();
+            if (value.isEmpty()) return null;
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            return LocalDate.parse(value, formatter);
+        }
+
+        throw new IllegalArgumentException("Ngày sinh không hợp lệ");
+    }
+
+
+    private void validate(
+            String userId,
+            String fullName,
+            LocalDate dateOfBirth,
+            String beltLevel,
+            String phoneNumber
+    ) {
+        if (userId == null || userId.isEmpty()) {
+            throw new IllegalArgumentException("Mã võ sinh không được để trống");
+        }
+        if (fullName == null || fullName.isEmpty()) {
+            throw new IllegalArgumentException("Họ và tên không được để trống");
+        }
+        if (dateOfBirth == null) {
+            throw new IllegalArgumentException("Ngày sinh không hợp lệ");
+        }
+        if (beltLevel == null || beltLevel.isEmpty()) {
+            throw new IllegalArgumentException("Cấp đai không được để trống");
+        }
+        if (phoneNumber != null && !phoneNumber.matches("^0\\d{9,10}$")) {
+            throw new IllegalArgumentException("Số điện thoại không hợp lệ");
+        }
+    }
+
+
+    private String get(Row row, int index) {
+        Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        if (cell == null) {
+            return "";
+        }
+
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield cell.getLocalDateTimeCellValue().toString();
+                }
+                yield BigDecimal.valueOf(cell.getNumericCellValue())
+                        .stripTrailingZeros()
+                        .toPlainString();
+            }
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula();
+            case BLANK -> "";
+            default -> "";
+        };
+    }
+
 
     private UserWithFacilityClass toUserWithFacilityClass(User user) {
         UserWithFacilityClass userWithFacilityClass = new UserWithFacilityClass();

@@ -55,8 +55,8 @@ public class SessionController {
 //                    .body("Bạn không có quyền thêm buổi học.");
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
-        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
-        if (daysBetween > 90) {
+        long daysBetween = Math.abs(ChronoUnit.DAYS.between(startDate, endDate));
+        if (daysBetween > 1000) {
             throw new IllegalArgumentException("Khoảng thời gian tạo session không được vượt quá 90 ngày.");
         }
         try {
@@ -196,6 +196,20 @@ public class SessionController {
         }
     }
 
+    @GetMapping("/admin/statistics-instructor-session")
+    public ResponseEntity<?> getStatisticsInstructorSession(@RequestParam Integer facilityId,
+                                                            @RequestParam String startDate,
+                                                            @RequestParam String endDate) {
+        try {
+            return ResponseEntity.ok(sessionService.getInstructorSessionAttendancesStatistics(facilityId,
+                    LocalDate.parse(startDate), LocalDate.parse(endDate)));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
     @GetMapping("/instructor/session-user-data")
     public ResponseEntity<?> getInstructorSessions(@AuthenticationPrincipal User currentUser,
                                                    @RequestParam String startDate,
@@ -209,7 +223,7 @@ public class SessionController {
         }
     }
 
-    @PutMapping("/report-session")
+    @PutMapping("/instructor/report-session")
     public ResponseEntity<?> reportSession(@AuthenticationPrincipal User instructor,
                                            @RequestBody InstructorSessionUpdateDTO updatedSession) {
         try {
