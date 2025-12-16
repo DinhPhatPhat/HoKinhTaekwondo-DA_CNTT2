@@ -12,7 +12,7 @@ public class UserImportRowResult {
     private final int rowNumber;
     private final String userId;
     private final String fullName;
-    private final LocalDate dateOfBirth;
+    private final String dateOfBirth;
     private final String beltLevel;
     private final String address;
     private final String phoneNumber;

@@ -34,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -444,6 +445,7 @@ public class UserService implements UserDetailsService {
         }
         FacilityClass facilityClass = facilityClassRepository.findById(classId).orElseThrow(() -> new RuntimeException("Không tìm thấy lớp với id là " + classId));
         List<UserImportRowResult> results = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         try (Workbook wb = new XSSFWorkbook(file.getInputStream())) {
 
@@ -476,6 +478,7 @@ public class UserService implements UserDetailsService {
                     user.setBeltLevel(beltLevel);
                     user.setAddress(address);
                     user.setRole(roleType);
+                    user.setPassword(passwordEncoder.encode(userId+ "12345678@"));
                     userRepository.save(user);
                     // add to class
                     FacilityClassUser facilityClassUser = new FacilityClassUser();
@@ -486,19 +489,25 @@ public class UserService implements UserDetailsService {
                     facilityClassUser.setCreatedAt(LocalDateTime.now());
                     facilityClassUserRepository.save(facilityClassUser);
                     // add to result
+                    if(dateOfBirth == null) {
+                        throw new IllegalArgumentException("Ngày sinh không được để trống");
+                    }
                     results.add(new UserImportRowResult(
-                            i + 1, userId, fullName, dateOfBirth, beltLevel, address, phoneNumber, null
+                            i + 1, userId, fullName, dateOfBirth.format(formatter), beltLevel, address, phoneNumber, null
                     ));
 
                 } catch (Exception ex) {
                     results.add(new UserImportRowResult(
-                            i + 1, userId, fullName, dateOfBirth, beltLevel, address, phoneNumber, ex.getMessage()
+                            i + 1, userId, fullName, dateOfBirth != null ? dateOfBirth.format(formatter) : null, beltLevel, address, phoneNumber, ex.getMessage()
                     ));
                 }
             }
 
         } catch (IOException e) {
             throw new RuntimeException("Không đọc được file excel. Lỗi: ", e);
+        }
+        catch (DateTimeException dte) {
+            throw new RuntimeException("Không đọc được file excel. Lỗi: ", dte);
         }
 
         return new UserImportResult(results);
