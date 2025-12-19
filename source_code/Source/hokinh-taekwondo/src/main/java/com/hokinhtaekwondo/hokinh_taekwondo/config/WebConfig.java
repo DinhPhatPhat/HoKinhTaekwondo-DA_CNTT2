@@ -14,6 +14,12 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:5173") // React app's URL
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
+                .exposedHeaders(
+                        "X-Total-Rows",
+                        "X-Success-Count",
+                        "X-Failure-Count",
+                        "Content-Disposition"
+                )
                 .allowCredentials(true);
     }
 }

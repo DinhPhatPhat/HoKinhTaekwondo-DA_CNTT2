@@ -8,6 +8,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -35,8 +36,8 @@ public class FacilityClassService {
         facilityClass.setStartHour(dto.getStartHour());
         facilityClass.setEndHour(dto.getEndHour());
         facilityClass.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
-        facilityClass.setCreatedAt(LocalDateTime.now());
-        facilityClass.setUpdatedAt(LocalDateTime.now());
+        facilityClass.setCreatedAt(VietNamTime.nowDateTime());
+        facilityClass.setUpdatedAt(VietNamTime.nowDateTime());
 
         return convertToFacilityClassGeneralInfo(facilityClassRepository.save(facilityClass));
     }
@@ -65,11 +66,12 @@ public class FacilityClassService {
             facilityClass.setIsActive(dto.getIsActive());
         }
 
-        facilityClass.setUpdatedAt(LocalDateTime.now());
+        facilityClass.setUpdatedAt(VietNamTime.nowDateTime());
         facilityClassRepository.save(facilityClass);
     }
 
     public void updateClasses(List<FacilityClassUpdateMultiDTO> classes) {
+
         for(FacilityClassUpdateMultiDTO dto : classes) {
             FacilityClass facilityClass = facilityClassRepository.findById(dto.getId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp có ID = " + dto.getId()));
@@ -93,7 +95,7 @@ public class FacilityClassService {
                 facilityClass.setIsActive(dto.getIsActive());
             }
 
-            facilityClass.setUpdatedAt(LocalDateTime.now());
+            facilityClass.setUpdatedAt(VietNamTime.nowDateTime());
             facilityClassRepository.save(facilityClass);
         }
     }

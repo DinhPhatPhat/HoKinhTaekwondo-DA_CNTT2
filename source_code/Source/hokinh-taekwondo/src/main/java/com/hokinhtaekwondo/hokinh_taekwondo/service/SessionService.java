@@ -2,20 +2,22 @@ package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClassUser.ClassOfStudent;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.*;
-import com.hokinhtaekwondo.hokinh_taekwondo.dto.sessionUser.StudentAttendanceDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.instructor.FacilityClassInfo;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.instructor.FacilityInfo;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.instructor.SessionAttendanceDTOForInstructor;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.instructor.SessionStatisticsForInstructor;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.FullSessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.SessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.ConflictException;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,6 +65,7 @@ public class SessionService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học."));
 
         int createdCount = 0;
+
         // Find all old sessions
         List<Integer> oldSessions = sessionRepository.findIdsByFacilityClassIdAndDateBetween(facilityClass.getId(), startDate, endDate);
         // Delete users in old session and old sessions
@@ -100,7 +103,7 @@ public class SessionService {
             }
         }
 
-        facilityClass.setSessionsUpdatedAt(LocalDateTime.now());
+        facilityClass.setSessionsUpdatedAt(VietNamTime.nowDateTime());
         facilityClass.setLatestSession(sessionRepository.findTopByFacilityClassOrderByDateDesc(facilityClass).getDate());
         facilityClassRepository.save(facilityClass);
 
@@ -389,13 +392,14 @@ public class SessionService {
     }
 
     public SessionStatistics getInstructorSessionAttendancesStatistics(Integer facilityId, LocalDate start, LocalDate end) {
-        if(end.isBefore(LocalDate.now())) {
+
+        if(end.isBefore(VietNamTime.nowDate())) {
             throw new RuntimeException("Thời điểm thống kê không phù hợp");
         }
 
-//        if(Math.abs(ChronoUnit.DAYS.between(start, end)) > 365) {
-//            throw new RuntimeException("Khoảng thời gian phải dưới 365 ngày");
-//        }
+        if(Math.abs(ChronoUnit.DAYS.between(start, end)) > 365) {
+            throw new RuntimeException("Khoảng thời gian phải dưới 365 ngày");
+        }
 
         List<InstructorSessionStatistics> instructorSessionStatistics = new ArrayList<>();
         List<StudentAttendanceStatistics> studentAttendanceList = new ArrayList<>();
@@ -461,6 +465,38 @@ public class SessionService {
         SessionStatistics result = new SessionStatistics();
         result.setInstructorSessionStatistics(instructorSessionStatistics);
         result.setStudentAttendanceList(studentAttendanceList);
+        return result;
+    }
+
+    public SessionStatisticsForInstructor getSessionStatisticsForInstructor(String userId, LocalDate start, LocalDate end) {
+        List<SessionAttendanceDTOForInstructor> sessionData = sessionRepository.findAllSessionsForInstructorsByUserId(userId, start, end);
+        SessionStatisticsForInstructor result = new SessionStatisticsForInstructor();
+        HashMap<Integer, FacilityInfo> facilityMap = new HashMap<>();
+        HashMap<Integer, FacilityClassInfo> classMap = new HashMap<>();
+
+        for(SessionAttendanceDTOForInstructor dto : sessionData) {
+            facilityMap.putIfAbsent(dto.getFacilityId(), new FacilityInfo(dto.getFacilityName()));
+            classMap.putIfAbsent(dto.getFacilityClassId(), new FacilityClassInfo(dto.getFacilityClassName(), dto.getFacilityId()));
+            if(dto.getRoleInSession().equals("off") || !dto.getAttended()) {
+                AbsentSession absentSession = new AbsentSession();
+                absentSession.setDate(dto.getDate());
+                absentSession.setClassId(dto.getFacilityClassId());
+                absentSession.setFacilityId(dto.getFacilityId());
+                absentSession.setRoleInSession(dto.getRoleInSession());
+                result.getAbsentSessions().add(absentSession);
+            }
+            else {
+                PresentSession presentSession = new PresentSession();
+                presentSession.setDate(dto.getDate());
+                presentSession.setClassId(dto.getFacilityClassId());
+                presentSession.setFacilityId(dto.getFacilityId());
+                presentSession.setRoleInSession(dto.getRoleInSession());
+                presentSession.setLateMinutes(dto.getCheckinDelay().toMinutes());
+                result.getPresentSessions().add(presentSession);
+            }
+        }
+        result.setFacilityMap(facilityMap);
+        result.setClassMap(classMap);
         return result;
     }
 

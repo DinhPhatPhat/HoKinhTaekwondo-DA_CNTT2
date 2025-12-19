@@ -8,14 +8,18 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.SessionRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.SessionUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -28,15 +32,20 @@ public class SessionUserService {
 
     @Transactional
     public CheckinResponseDTO checkin(String userId, CheckinRequestDTO dto) {
+        Session sessionEntity = sessionRepository.findById(dto.getSessionId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy buổi học."));
+        LocalDateTime nowTime = VietNamTime.nowDateTime();
+        LocalDateTime sessionStartTime = LocalDateTime.of(sessionEntity.getDate(), sessionEntity.getStartTime());
+        LocalDateTime sessionEndTime = LocalDateTime.of(sessionEntity.getDate(), sessionEntity.getEndTime());
+        if(nowTime.isBefore(sessionStartTime.minusMinutes(30)) || nowTime.isAfter(sessionEndTime)) {
+            throw new ValidationException("Thời gian check in buổi học không nằm trong thời gian hợp lệ");
+        }
 
         SessionUser sessionUser = sessionUserRepository
                 .findBySessionIdAndUserId(dto.getSessionId(), userId);
         if(sessionUser == null) {
             throw new RuntimeException("Không tìm thấy người dùng trong buổi học này");
         }
-
-        Session sessionEntity = sessionRepository.findById(dto.getSessionId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy buổi học."));
 
         FacilityClass facilityClass = sessionEntity.getFacilityClass();
         Facility facility = facilityClass.getFacility();
@@ -49,7 +58,7 @@ public class SessionUserService {
         }
 
         sessionUser.setAttended(true);
-        sessionUser.setCheckinTime(LocalDateTime.now());
+        sessionUser.setCheckinTime(VietNamTime.nowDateTime());
         sessionUserRepository.save(sessionUser);
         CheckinResponseDTO checkinResponseDTO = new CheckinResponseDTO();
         checkinResponseDTO.setMessage("Check-in thành công tại khoảng cách " + Math.round(distance) + "m.");
@@ -79,7 +88,7 @@ public class SessionUserService {
 
         student.setAttended(studentDTO.getAttended());
         if(student.getAttended()) {
-            student.setCheckinTime(LocalDateTime.now());
+            student.setCheckinTime(VietNamTime.nowDateTime());
         }
         else {
             student.setCheckinTime(null);

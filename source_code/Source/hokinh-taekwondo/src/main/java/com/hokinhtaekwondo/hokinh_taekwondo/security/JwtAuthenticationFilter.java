@@ -49,9 +49,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             LoginResponseDTO loginResponse = new LoginResponseDTO();
             loginResponse.setToken(token);
             loginResponse.setUserInfo(new UserLoginResponse(user.getName(), user.getRole()));
-            response.setContentType("application/json");
-            new ObjectMapper().writeValue(response.getWriter(), loginResponse);
+            System.out.println(loginResponse.getUserInfo().getName());
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json;charset=UTF-8");
             response.setStatus(HttpServletResponse.SC_OK);
+            new ObjectMapper().writeValue(response.getWriter(), loginResponse);
         }
         catch (AuthenticationException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

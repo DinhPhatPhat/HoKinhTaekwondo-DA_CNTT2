@@ -7,15 +7,13 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.Equipment;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.EquipmentRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +21,6 @@ public class EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
     private final FacilityRepository facilityRepository;
-    private final FacilityService facilityService;
 
     // **AUTHENTICATION
     // --- Create ---
@@ -43,8 +40,8 @@ public class EquipmentService {
         Facility facility = facilityRepository.findById(dto.getFacilityId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
         equipment.setFacility(facility);
-        equipment.setCreatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-        equipment.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        equipment.setCreatedAt(VietNamTime.nowDateTime());
+        equipment.setUpdatedAt(VietNamTime.nowDateTime());
 
         return toDTO(equipmentRepository.save(equipment));
     }
@@ -86,8 +83,7 @@ public class EquipmentService {
         if (StringUtils.hasText(dto.getUnit())) {
             equipment.setUnit(dto.getUnit());
         }
-
-        equipment.setUpdatedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        equipment.setUpdatedAt(VietNamTime.nowDateTime());
         equipmentRepository.save(equipment);
     }
 

@@ -9,10 +9,10 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +38,7 @@ public class FacilityService {
         facility.setLatitude(dto.getLatitude());
         facility.setLongitude(dto.getLongitude());
         facility.setIsActive(dto.getIsActive());
-        facility.setCreatedAt(LocalDateTime.now());
+        facility.setCreatedAt(VietNamTime.nowDateTime());
 
         // Gắn manager nếu có
         if (dto.getManagerUserId() != null) {
@@ -54,7 +54,6 @@ public class FacilityService {
     public void updateFacility(Integer id, FacilityUpdateDTO dto) {
         Facility facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Facility not found"));
-
         // Update only non-null fields
         if (dto.getName() != null) facility.setName(dto.getName());
         if (dto.getAddress() != null) facility.setAddress(dto.getAddress());
@@ -77,7 +76,7 @@ public class FacilityService {
             }
         }
 
-        facility.setUpdatedAt(LocalDateTime.now());
+        facility.setUpdatedAt(VietNamTime.nowDateTime());
         facilityRepository.save(facility);
     }
 

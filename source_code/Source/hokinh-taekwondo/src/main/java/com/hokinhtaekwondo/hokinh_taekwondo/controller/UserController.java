@@ -311,11 +311,13 @@ public class UserController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=users-import-errors.xlsx")
+                // Add custom headers with statistics
+                .header("X-Total-Rows", String.valueOf(result.getTotalRows()))
+                .header("X-Success-Count", String.valueOf(result.getSuccessCount()))
+                .header("X-Failure-Count", String.valueOf(result.getFailureCount()))
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 ))
                 .body(errorFile);
     }
-
-
 }

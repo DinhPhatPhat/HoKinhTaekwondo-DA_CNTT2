@@ -14,6 +14,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserReposito
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
@@ -34,9 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.DateTimeException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -254,7 +253,6 @@ public class UserService implements UserDetailsService {
         }
 
         List<User> usersToSave = new ArrayList<>();
-
         for (UserCreateDTO dto : userList) {
 
             User user = new User();
@@ -264,7 +262,7 @@ public class UserService implements UserDetailsService {
             user.setDateOfBirth(dto.getDateOfBirth());
             user.setEmail(dto.getEmail());
             user.setAvatar(dto.getAvatar());
-            user.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+            user.setCreatedAt(Timestamp.valueOf(VietNamTime.nowDateTime()));
             user.setRole(dto.getRole());
             user.setBeltLevel(dto.getBeltLevel());
             user.setIsActive(true);
@@ -324,7 +322,7 @@ public class UserService implements UserDetailsService {
             user.setDateOfBirth(dto.getDateOfBirth());
             user.setEmail(dto.getEmail());
             user.setAvatar(dto.getAvatar());
-            user.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
+            user.setCreatedAt(Timestamp.valueOf(VietNamTime.nowDateTime()));
             user.setRole(dto.getRole());
             user.setBeltLevel(dto.getBeltLevel());
             user.setIsActive(true);
@@ -453,10 +451,12 @@ public class UserService implements UserDetailsService {
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 
+
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
                 String userId = get(row, COL_MA_VO_SINH);
+                System.out.println(i + userId);
                 String fullName = get(row, COL_HO_TEN);
                 LocalDate dateOfBirth = getDate(row, COL_NGAY_SINH);
                 String beltLevel = get(row, COL_CAP_DAI);
@@ -486,7 +486,7 @@ public class UserService implements UserDetailsService {
                     facilityClassUser.setFacilityClass(facilityClass);
                     facilityClassUser.setRoleInClass(type);
                     facilityClassUser.setIsActive(true);
-                    facilityClassUser.setCreatedAt(LocalDateTime.now());
+                    facilityClassUser.setCreatedAt(VietNamTime.nowDateTime());
                     facilityClassUserRepository.save(facilityClassUser);
                     // add to result
                     if(dateOfBirth == null) {

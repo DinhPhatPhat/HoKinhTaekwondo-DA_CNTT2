@@ -1,6 +1,7 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.*;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.instructor.SessionStatisticsForInstructor;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.FullSessionUserDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.SessionService;
@@ -229,6 +230,24 @@ public class SessionController {
         try {
             sessionService.reportSession(updatedSession, instructor.getId());
             return ResponseEntity.ok("Báo cáo buổi học thành công");
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/instructor/session-statistics")
+    public ResponseEntity<?> getStatisticsForInstructor(@AuthenticationPrincipal User instructor,
+                                                        @RequestParam String startDate,
+                                                        @RequestParam String endDate) {
+        try {
+            SessionStatisticsForInstructor result = sessionService.getSessionStatisticsForInstructor(
+                    instructor.getId(),
+                    LocalDate.parse(startDate),
+                    LocalDate.parse(endDate)
+            );
+            return  ResponseEntity.ok(result);
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

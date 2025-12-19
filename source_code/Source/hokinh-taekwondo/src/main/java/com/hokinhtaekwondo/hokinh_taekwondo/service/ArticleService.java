@@ -7,6 +7,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.Article;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.ArticleCategory;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.ArticleCategoryRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.ArticleRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -15,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,7 +68,7 @@ public class ArticleService {
         article.setTitle(dto.getTitle());
         article.setContent(dto.getContent());
         article.setCoverImage(dto.getCoverImage());
-        article.setDate(dto.getDate() != null ? dto.getDate() : LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        article.setDate(VietNamTime.nowDateTime());
         article.setAuthor(dto.getAuthor());
         article.setCategory(dto.getCategory());
         article.setDeleted(dto.isDeleted());
@@ -133,7 +132,7 @@ public class ArticleService {
 
     // ----------- CREATE ARTICLE -----------
     public ArticleDTO createArticle(ArticleDTO articleDTO) {
-        articleDTO.setDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        articleDTO.setDate(VietNamTime.nowDateTime());
         articleDTO.setDeleted(false);
 
         Article article = convertToEntity(articleDTO);
@@ -164,7 +163,7 @@ public class ArticleService {
         existingArticle.setAuthor(updatedArticle.getAuthor());
         existingArticle.setType(updatedArticle.getType());
         existingArticle.setCategory(updatedArticle.getCategory());
-        existingArticle.setDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        existingArticle.setDate(VietNamTime.nowDateTime());
 
         Article saved = articleRepository.save(existingArticle);
         return convertToDTO(saved);
@@ -207,11 +206,11 @@ public class ArticleService {
             existingArticle.setCategory(updatedArticle.getCategory());
         }
         if (updatedArticle.getDate() != null) {
-            existingArticle.setDate(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+            existingArticle.setDate(VietNamTime.nowDateTime());
         }
         if(updatedArticle.isDeleted()) {
             existingArticle.setDeleted(true);
-            existingArticle.setDeletedAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+            existingArticle.setDeletedAt(VietNamTime.nowDateTime());
         }
         else {
             existingArticle.setDeleted(false);

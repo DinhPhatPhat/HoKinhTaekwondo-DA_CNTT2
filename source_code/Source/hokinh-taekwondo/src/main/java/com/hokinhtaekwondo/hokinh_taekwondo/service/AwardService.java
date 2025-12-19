@@ -2,13 +2,12 @@ package com.hokinhtaekwondo.hokinh_taekwondo.service;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Award;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.AwardRepository;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -34,10 +33,11 @@ public class AwardService {
 
     public Award patchAward(Long id, Map<String, Object> updatedFields) {
         Award award = awardRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy giải thưởng tương ứng"));;
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giải thưởng tương ứng"));
+
         if(updatedFields.containsKey("isDeleted")) {
             award.setDeleted((Boolean) updatedFields.get("isDeleted"));
-            award.setDeletedAt(LocalDateTime.now());
+            award.setDeletedAt(VietNamTime.nowDateTime());
         }
         // other empty fields
         return awardRepository.save(award);
