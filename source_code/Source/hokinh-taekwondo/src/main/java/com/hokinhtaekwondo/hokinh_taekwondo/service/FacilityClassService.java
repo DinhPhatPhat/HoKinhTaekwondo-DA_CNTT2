@@ -6,8 +6,10 @@ import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdat
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.facilityClass.FacilityClassUpdateMultiDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,10 +45,13 @@ public class FacilityClassService {
     }
 
     // --- Update ---
-    public void updateFacilityClass(Integer id, FacilityClassUpdateDTO dto) {
+    public void updateFacilityClass(Integer id, FacilityClassUpdateDTO dto, User creator) {
         FacilityClass facilityClass = facilityClassRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp có ID = " + id));
-
+        User facilityManager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, facilityManager)) {
+            throw new RuntimeException("Bạn không có quyền thay đổi thông tin lớp");
+        }
         if (StringUtils.hasText(dto.getName())) {
             facilityClass.setName(dto.getName());
         }

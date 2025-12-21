@@ -237,6 +237,22 @@ public class SessionController {
         }
     }
 
+    @GetMapping("/student/schedule")
+    public ResponseEntity<?> getStudentSchedule(@AuthenticationPrincipal User student,
+                                                @RequestParam String startDate,
+                                                @RequestParam String endDate) {
+        try {
+            return ResponseEntity.ok(sessionService.getStudentSchedule(
+                    student.getId(),
+                    LocalDate.parse(startDate),
+                    LocalDate.parse(endDate)));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
     @GetMapping("/instructor/session-statistics")
     public ResponseEntity<?> getStatisticsForInstructor(@AuthenticationPrincipal User instructor,
                                                         @RequestParam String startDate,

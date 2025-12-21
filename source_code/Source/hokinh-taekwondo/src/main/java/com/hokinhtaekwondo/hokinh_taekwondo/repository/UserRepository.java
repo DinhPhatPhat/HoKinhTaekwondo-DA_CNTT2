@@ -21,7 +21,29 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<User> findAllByRole(Integer role);
     Long countById(String id);
 
-    Page<User> findByIsActiveTrueAndRoleAndNameContainingIgnoreCase(int i, String searchKey, Pageable pageable);
+    @Query("""
+    SELECT u FROM User u
+    WHERE (u.facility IS NULL OR u.facility.manager.id = :managerId) 
+    AND u.role = :role 
+    AND LOWER(u.name) LIKE LOWER(CONCAT('%', :searchKey, '%'))
+""")
+    Page<User> findUserWithRoleForManagerByName(@Param("managerId") String managerId,
+                                            @Param("role") int role,
+                                            @Param("searchKey") String searchKey,
+                                            Pageable pageable);
 
     Page<User> findByIsActiveTrueAndRoleInAndNameContainingIgnoreCase(Collection<Integer> role, String name, Pageable pageable);
+    Page<User> findByIsActiveTrueAndRoleEqualsAndNameContainingIgnoreCase(int role, String searchKey,Pageable pageable);
+    @Query("SELECT u.id FROM User u WHERE (u.role = 0 OR u.role = 1) AND u.id IN :ids")
+    List<String> existManagerOrClubHead(@Param("ids") List<String> ids);
+    Page<User> findByFacility_Id(Integer id, Pageable pageable);
+    @Query("""
+    SELECT u 
+    FROM User u
+    JOIN FETCH u.facility fac
+    WHERE fac.id = :facilityId
+    AND u.role > 1
+    """)
+    Page<User> findUsersByFacilityIdForManager(@Param("facilityId") Integer facilityId,
+                                               Pageable pageable);
 }

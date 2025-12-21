@@ -13,6 +13,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -37,10 +39,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -184,6 +183,21 @@ public class UserService implements UserDetailsService {
         return facility.getManager().getId().equals(currentUserId);
     }
 
+    public Page<UserManagementDTO> getUserByFacilityId(int facilityId, User user, int page, int size) {
+        Facility facility = facilityRepository.findById(facilityId).orElse(null);
+        if(!ValidateRole.isResponsibleForFacility(user, facility != null ? facility.getManager() : null)) {
+            throw new RuntimeException("Bạn không có quyền xem những người dùng này");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<UserManagementDTO> result = null;
+        if(user.getRole() == 0) {
+            result = userRepository.findByFacility_Id(facilityId, pageable).map(this::toManagementResponseDTO);
+        }
+        else if(user.getRole() == 1) {
+            result = userRepository.findUsersByFacilityIdForManager(facilityId, pageable).map(this::toManagementResponseDTO);
+        }
+        return result;
+    }
 
     public String upLoadImage(MultipartFile imageFile, String userId) throws IOException {
 
@@ -241,7 +255,21 @@ public class UserService implements UserDetailsService {
         dto.setAvatar(user.getAvatar());
         dto.setRole((user.getRole()));
         dto.setBeltLevel(String.valueOf(user.getBeltLevel()));
-        dto.setFacilityId(user.getFacility().getId());
+        dto.setFacilityId(user.getFacility() != null ? user.getFacility().getId() : null);
+        return dto;
+    }
+
+    private UserManagementDTO toManagementResponseDTO(User user) {
+        UserManagementDTO dto = new UserManagementDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setDateOfBirth(user.getDateOfBirth());
+        dto.setEmail(user.getEmail());
+        dto.setAvatar(user.getAvatar());
+        dto.setRole((user.getRole()));
+        dto.setBeltLevel(String.valueOf(user.getBeltLevel()));
+        dto.setFacilityId(user.getFacility() != null ? user.getFacility().getId() : null);
         return dto;
     }
 
@@ -295,13 +323,26 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public List<User> createMembersForClass(List<UserCreateForClassDTO> userList) {
+    public List<User> createMembersForClass(List<UserCreateForClassDTO> userList, User creator, Integer classId) {
+        FacilityClass facilityClass = facilityClassRepository.findById(classId).orElse(null);
+        if(facilityClass == null) {
+            throw new IllegalArgumentException("Lớp không hợp lệ");
+        }
+        User facilityManager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, facilityManager)) {
+            throw new RuntimeException("Bạn không có quyền tạo người dùng trong lớp");
+        }
         if (userList == null || userList.isEmpty()) {
             throw new IllegalArgumentException("Danh sách người dùng không được trống.");
         }
         List<String> userIds = new ArrayList<>(userList.size());
         for (UserCreateForClassDTO user : userList) {
             userIds.add(user.getId());
+        }
+
+        List<String> existAdminUser = userRepository.existManagerOrClubHead(userIds);
+        if(existAdminUser != null && !existAdminUser.isEmpty()) {
+            throw new RuntimeException("Bạn không được tạo những người dùng này");
         }
 
         List<String> duplicatedUserIds = userRepository.findExistingIds(userIds);
@@ -313,9 +354,7 @@ public class UserService implements UserDetailsService {
         List<UserInClassDTO> usersInClass = new ArrayList<>();
 
         for (UserCreateForClassDTO dto : userList) {
-
             User user = new User();
-            System.out.println(dto.getId());
             user.setId(dto.getId());
             user.setName(dto.getName());
             user.setPhoneNumber(dto.getPhoneNumber());
@@ -327,8 +366,7 @@ public class UserService implements UserDetailsService {
             user.setBeltLevel(dto.getBeltLevel());
             user.setIsActive(true);
             user.setLoginPin(0);
-            user.setPassword(passwordEncoder.encode("12345678"));
-            System.out.println(user.getPassword());
+            user.setPassword(passwordEncoder.encode(user.getId() + "12345678@"));
 
 
             // --- Liên kết cơ sở (Facility) ---
@@ -364,7 +402,7 @@ public class UserService implements UserDetailsService {
         }
         // --- Đưa người dùng mới tạo vào lớp học ---
         try {
-            facilityClassUserService.bulkCreate(facilityClassUserBulkCreateDTO);
+            facilityClassUserService.bulkCreate(facilityClassUserBulkCreateDTO, creator);
         }
         catch (Exception e) {
             System.out.println("In Class: " + e.getMessage());
@@ -374,25 +412,49 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public Page<UserWithFacilityClass> getActiveStudentsByName(String searchKey, int page, int size) {
+    public Page<UserWithFacilityClass> getActiveStudentsByName(String searchKey, int page, int size, User searcher) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        return userRepository.findByIsActiveTrueAndRoleAndNameContainingIgnoreCase(4, searchKey, pageable)
-                .map(this::toUserWithFacilityClass);
+        if(searcher.getRole() == 1) {
+            return userRepository.findUserWithRoleForManagerByName(
+                            searcher.getId(),4, searchKey, pageable)
+                    .map(this::toUserWithFacilityClass);
+        }
+        if(searcher.getRole() == 0) {
+            return userRepository.findByIsActiveTrueAndRoleEqualsAndNameContainingIgnoreCase(4,  searchKey, pageable)
+                    .map(this::toUserWithFacilityClass);
+        }
+        return null;
     }
 
-    public Page<UserWithFacilityClass> getActiveCoachInstructorByName(String searchKey, int page, int size) {
+    public Page<UserWithFacilityClass> getActiveCoachInstructorByName(String searchKey, int page, int size, User searcher) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         // Lọc role = 2 hoặc 3
+        if(searcher.getRole() > 1) {
+            throw new RuntimeException("Không cho phép tìm kiếm người dùng");
+        }
         return userRepository.findByIsActiveTrueAndRoleInAndNameContainingIgnoreCase(
-                Arrays.asList(2, 3), searchKey, pageable).map(this::toUserWithFacilityClass);
+                Arrays.asList(2, 3),
+                searchKey,
+                pageable).map(this::toUserWithFacilityClass);
     }
 
     @Transactional
-    public void bulkUpdateUsers(List<UserUpdateDTO> userList) {
+    public void bulkUpdateUsers(List<UserUpdateDTO> userList, Integer classId, User creator) {
+        FacilityClass facilityClass = facilityClassRepository.findById(classId).orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở với id là " + classId));
+        User manager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, manager)) {
+            throw new RuntimeException("Bạn không có quyền thay đổi những người dùng này");
+        }
         for (UserUpdateDTO dto : userList) {
             User user = userRepository.findById(dto.getId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng có ID = " + dto.getId()));
-
+            if(user.getRole() < 2
+                    || dto.getRole() < 2
+                    || dto.getRole() > 4
+                    || (user.getRole() == 4 && dto.getRole() != 4)
+                    || (user.getRole() != 4 && dto.getRole() == 4)) {
+                throw new RuntimeException("Không cho phép thay đổi người dùng");
+            }
             if (StringUtils.hasText(dto.getName())) {
                 user.setName(dto.getName());
             }
@@ -433,7 +495,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public UserImportResult importUsers(MultipartFile file, String type, Integer classId) {
+    public UserImportResult importUsers(MultipartFile file, String type, Integer classId, User creator) {
         Integer roleType = 4;
         if(type.equals("instructor")) {
             roleType = 3;
@@ -442,6 +504,10 @@ public class UserService implements UserDetailsService {
             roleType = 2;
         }
         FacilityClass facilityClass = facilityClassRepository.findById(classId).orElseThrow(() -> new RuntimeException("Không tìm thấy lớp với id là " + classId));
+        User facilityManager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, facilityManager)) {
+            throw new RuntimeException("Bạn không có quyền thay đổi người dùng trong lớp");
+        }
         List<UserImportRowResult> results = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -507,7 +573,7 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Không đọc được file excel. Lỗi: ", e);
         }
         catch (DateTimeException dte) {
-            throw new RuntimeException("Không đọc được file excel. Lỗi: ", dte);
+            throw new RuntimeException("Không đọc được file excel. Lỗi ngày tháng: ", dte);
         }
 
         return new UserImportResult(results);
@@ -591,7 +657,7 @@ public class UserService implements UserDetailsService {
         userWithFacilityClass.setDateOfBirth(user.getDateOfBirth());
         userWithFacilityClass.setEmail(user.getEmail());
         userWithFacilityClass.setAvatar(user.getAvatar());
-        userWithFacilityClass.setFacilityId(user.getFacility().getId());
+        userWithFacilityClass.setFacilityId(user.getFacility() != null ? user.getFacility().getId() : null);
         userWithFacilityClass.setBeltLevel(user.getBeltLevel());
         userWithFacilityClass.setPassword(null);
         userWithFacilityClass.setIsActive(user.getIsActive());

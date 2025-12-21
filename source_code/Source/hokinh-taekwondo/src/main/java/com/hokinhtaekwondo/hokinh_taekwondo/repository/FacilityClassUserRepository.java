@@ -20,7 +20,7 @@ public interface FacilityClassUserRepository extends JpaRepository<FacilityClass
     List<FacilityClassUser> findByFacilityClass_IdAndIsActiveFalse(Integer facilityClassId);
 
     Optional<FacilityClassUser> findByUserIdAndIsActiveTrue(String userId);
-
+    Boolean existsByUserId(String userId);
     @Query("SELECT fcu.facilityClass.id FROM FacilityClassUser fcu " +
             "WHERE fcu.userId = :userId AND fcu.isActive = true")
     Integer findActiveClassForUser(@Param("userId") String userId);

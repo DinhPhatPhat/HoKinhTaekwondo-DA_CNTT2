@@ -119,7 +119,7 @@ public class EquipmentService {
         EquipmentDTO equipmentDTO = new EquipmentDTO();
         equipmentDTO.setId(equipment.getId());
         equipmentDTO.setName(equipment.getName());
-        equipmentDTO.setFacilityId(equipment.getFacility().getId());
+        equipmentDTO.setFacilityId(equipment.getFacility() != null ? equipment.getFacility().getId() : null);
 
         equipmentDTO.setUnit(equipment.getUnit());
 

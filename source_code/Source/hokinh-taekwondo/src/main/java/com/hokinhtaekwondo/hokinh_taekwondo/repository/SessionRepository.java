@@ -2,6 +2,7 @@ package com.hokinhtaekwondo.hokinh_taekwondo.repository;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.InstructorSessionInfo;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.SessionAttendanceDTO;
+import com.hokinhtaekwondo.hokinh_taekwondo.dto.session.StudentScheduleInfo;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.statistics.instructor.SessionAttendanceDTOForInstructor;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Session;
@@ -102,6 +103,32 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
             AND s.date BETWEEN :startDate AND :endDate
     """)
     List<SessionAttendanceDTOForInstructor> findAllSessionsForInstructorsByUserId(
+            @Param("userId") String userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+        SELECT new com.hokinhtaekwondo.hokinh_taekwondo.dto.session.StudentScheduleInfo(
+            s.date,
+            s.startTime,
+            s.endTime,
+            su.attended,
+            su.review,
+            s.status,
+            fc.name,
+            fac.name,
+            fac.address,
+            fac.mapsLink
+        )
+        FROM Session s
+        JOIN s.facilityClass fc
+        JOIN fc.facility fac
+        JOIN SessionUser su ON su.sessionId = s.id
+        WHERE su.userId = :userId
+          AND s.date BETWEEN :startDate AND :endDate
+    """)
+    List<StudentScheduleInfo> findAllSessionsForStudentByUserIdAndDateRange(
             @Param("userId") String userId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate

@@ -500,6 +500,13 @@ public class SessionService {
         return result;
     }
 
+    public List<StudentScheduleInfo> getStudentSchedule(String userId, LocalDate start, LocalDate end) {
+        return sessionRepository.findAllSessionsForStudentByUserIdAndDateRange(
+                userId,
+                start,
+                end);
+    }
+
     private InstructorSessionDTO toInstructorSessionDTO(Session session, SessionUser su, FacilityClass facilityClass, Facility facility) {
         InstructorSessionDTO dto = new InstructorSessionDTO();
         // Attendance status of instructor

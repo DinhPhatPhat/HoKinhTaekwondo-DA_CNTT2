@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
@@ -160,27 +161,15 @@ public class FacilityClassUserController {
 
     @PostMapping("/admin/bulk-create")
     public ResponseEntity<?> bulkCreate(
+            @AuthenticationPrincipal User creator,
             @Validated @RequestBody FacilityClassUserBulkCreateDTO dto,
-            BindingResult bindingResult,
-            HttpSession session,
-            @CookieValue(value = "token", required = false) String token) throws Exception {
-
-        // --- Kiểm tra đăng nhập ---
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null)
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body("Hãy đăng nhập trước khi thực hiện.");
-//
-//        // --- Chặn role không có quyền ---
-//        if (user.getRole() > 1)
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                    .body("Bạn không có quyền thêm người vào lớp.");
+            BindingResult bindingResult) throws Exception {
 
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
 
         try {
-            facilityClassUserService.bulkCreate(dto);
+            facilityClassUserService.bulkCreate(dto, creator);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Đã thêm " + dto.getUsers().size() + " người dùng vào lớp " + dto.getFacilityClassId());
         } catch (Exception e) {
@@ -191,27 +180,15 @@ public class FacilityClassUserController {
 
     @PutMapping("/admin/bulk-update")
     public ResponseEntity<?> bulkUpdate(
+            @AuthenticationPrincipal User creator,
             @Validated @RequestBody FacilityClassUserBulkUpdateDTO dto,
-            BindingResult bindingResult,
-            HttpSession session,
-            @CookieValue(value = "token", required = false) String token) throws Exception {
-
-        // --- Kiểm tra đăng nhập ---
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null)
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body("Hãy đăng nhập trước khi thực hiện.");
+            BindingResult bindingResult) throws Exception {
 //
-//        // --- Chặn role không có quyền ---
-//        if (user.getRole() > 1)
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                    .body("Bạn không có quyền thêm người vào lớp.");
-
-        ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
-        if (errorResponse != null) return errorResponse;
+//        ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
+//        if (errorResponse != null) return errorResponse;
 
         try {
-            facilityClassUserService.bulkUpdate(dto);
+            facilityClassUserService.bulkUpdate(dto, creator);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Đã sửa " + dto.getUsers().size() + " người dùng vào lớp " + dto.getFacilityClassId());
         } catch (Exception e) {
@@ -221,12 +198,12 @@ public class FacilityClassUserController {
     }
 
     @DeleteMapping("/admin/delete-class-members")
-    public ResponseEntity<?> deleteClassMembers(@RequestParam Integer classId,
-                                                @RequestBody List<String> members) {
-        System.out.println(classId);
-        System.out.println(members.getFirst());
+    public ResponseEntity<?> deleteClassMembers(
+            @AuthenticationPrincipal User creator,
+            @RequestParam Integer classId,
+            @RequestBody List<String> members) {
         try {
-            facilityClassUserService.deleteClassMembers(members, classId);
+            facilityClassUserService.deleteClassMembers(members, classId, creator);
             return ResponseEntity.ok("Đã xóa thành công " + members.size() + " các thành viên trong lớp");
         }
         catch (Exception e) {

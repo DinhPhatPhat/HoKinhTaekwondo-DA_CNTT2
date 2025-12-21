@@ -8,6 +8,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -141,14 +142,41 @@ public class FacilityClassUserService {
     }
 
     @Transactional
-    public void bulkCreate(FacilityClassUserBulkCreateDTO dto) {
+    public void bulkCreate(FacilityClassUserBulkCreateDTO dto, User creator) {
         // --- Kiểm tra lớp tồn tại ---
         FacilityClass facilityClass = facilityClassRepository.findById(dto.getFacilityClassId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp có ID = " + dto.getFacilityClassId()));
 
+        User facilityManager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, facilityManager)) {
+            throw new RuntimeException("Bạn không có quyền thêm người dùng trong lớp");
+        }
         List<FacilityClassUser> toSave = new ArrayList<>();
-
+        // Check if exist club head or manager
+        List<String> userIds = new ArrayList<>();
+        for(UserInClassDTO userDTO : dto.getUsers()) {
+            userIds.add(userDTO.getUserId());
+        }
+        List<String> checkAdminExist = userRepository.existManagerOrClubHead(userIds);
+        if(!checkAdminExist.isEmpty()) {
+            throw new RuntimeException("Bạn không có quyền thêm các người dùng này");
+        }
+        // Add users into class
         for (UserInClassDTO userDto : dto.getUsers()) {
+            if(userDto.getRoleInClass().equals("student")) {
+                if(facilityClassUserRepository.existsByUserId(userDto.getUserId())) {
+                    throw new RuntimeException("Võ sinh ID là " + userDto.getUserId() + " đã thuộc lớp khác. Chỉ có thể thêm võ sinh chưa thuộc lớp nào !");
+                }
+                else {
+                    // if target is student, change facility to current facility
+                    User user = userRepository.findById(userDto.getUserId()).orElse(null);
+                    if(user == null) {
+                        continue;
+                    }
+                    user.setFacility(facilityClass.getFacility());
+                }
+            }
+
             FacilityClassUser entity = new FacilityClassUser();
             entity.setFacilityClass(facilityClass);
             entity.setUserId(userDto.getUserId());
@@ -162,28 +190,30 @@ public class FacilityClassUserService {
     }
 
     @Transactional
-    public void bulkUpdate(FacilityClassUserBulkUpdateDTO dto) {
+    public void bulkUpdate(FacilityClassUserBulkUpdateDTO dto,  User creator) {
         // --- Kiểm tra lớp tồn tại ---
         FacilityClass facilityClass = facilityClassRepository.findById(dto.getFacilityClassId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp có ID = " + dto.getFacilityClassId()));
-
+        User facilityManager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, facilityManager)) {
+            throw new RuntimeException("Bạn không có quyền thay đổi người dùng trong lớp");
+        }
         List<FacilityClassUser> toSave = new ArrayList<>();
 
         for (UserInClassDTO userDto : dto.getUsers()) {
             FacilityClassUser entity = facilityClassUserRepository
                     .findByFacilityClassIdAndUserId(dto.getFacilityClassId(), userDto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Người dùng " + userDto.getUserId() + " chưa tồn tại trong lớp có id là "+ dto.getFacilityClassId()));
+                    .orElseThrow(() -> new RuntimeException("Cập nhật người dùng trong lớp không hợp lệ"));
             Optional<UserInClassDTO> safeUserDTO = Optional.of(userDto);
-            entity.setFacilityClass(facilityClass);
-            entity.setUserId(safeUserDTO.map(UserInClassDTO::getUserId).orElse(entity.getUserId()));
-            entity.setRoleInClass(safeUserDTO.map(UserInClassDTO::getRoleInClass).orElse(entity.getRoleInClass()));
+            if(!entity.getRoleInClass().equals("student")) {
+                if(!userDto.getRoleInClass().equals("student")) {
+                    entity.setRoleInClass(safeUserDTO.map(UserInClassDTO::getRoleInClass).orElse(entity.getRoleInClass()));
+                }
+            }
             entity.setIsActive(safeUserDTO.map(UserInClassDTO::getIsActiveInClass).orElse(entity.getIsActive()));
 
             toSave.add(entity);
         }
-        System.out.println(toSave.getFirst().getUserId());
-        System.out.println(toSave.getFirst().getIsActive());
-        System.out.println(toSave.getFirst().getRoleInClass());
 
         facilityClassUserRepository.saveAll(toSave);
     }
@@ -196,7 +226,20 @@ public class FacilityClassUserService {
     }
 
     @Transactional
-    public void deleteClassMembers(List<String> memIds, Integer classId) {
+    public void deleteClassMembers(List<String> memIds, Integer classId, User creator) {
+        FacilityClass facilityClass = facilityClassRepository.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp có ID = " + classId));
+
+        User facilityManager = facilityClass.getFacility().getManager();
+        if(!ValidateRole.isResponsibleForFacility(creator, facilityManager)) {
+            throw new RuntimeException("Bạn không có quyền xóa người dùng trong lớp");
+        }
         facilityClassUserRepository.deleteAllByFacilityClass_IdAndUserIdIn(classId, memIds);
+        for (String  memId : memIds) {
+            User user = userRepository.findById(memId).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+            if(user.getRole() == 4) {
+                user.setFacility(null);
+            }
+        }
     }
 }

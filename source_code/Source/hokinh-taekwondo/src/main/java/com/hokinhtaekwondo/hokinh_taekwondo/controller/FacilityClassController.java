@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,35 +62,22 @@ public class FacilityClassController {
     }
 
     @PutMapping("/admin/update/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id,
-                                    @Valid @RequestBody FacilityClassUpdateDTO dto,
-                                    BindingResult bindingResult,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Hãy đăng nhập.");
-//        }
-//        if (user.getRole() > 1) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền cập nhật lớp.");
-//        }
+    public ResponseEntity<?> update(
+            @AuthenticationPrincipal User creator,
+            @PathVariable Integer id,
+            @Valid @RequestBody FacilityClassUpdateDTO dto,
+            BindingResult bindingResult) throws Exception {
 
         FacilityClass existing = facilityClassService.getById(id);
         if (existing == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp có ID = " + id);
         }
 
-        // Kiểm tra quyền quản lý của role 1
-//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), existing.getFacility().getId())) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                    .body("Bạn không quản lý cơ sở chứa lớp này.");
-//        }
-
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
 
         try {
-            facilityClassService.updateFacilityClass(id, dto);
+            facilityClassService.updateFacilityClass(id, dto, creator);
             return ResponseEntity.ok("Đã cập nhật lớp " + dto.getName());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
