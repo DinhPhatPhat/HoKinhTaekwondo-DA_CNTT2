@@ -22,8 +22,9 @@ public class UserManagementDTO {
     private LocalDate dateOfBirth;
     private String email;
     private String password = "";
+    private Boolean isActive;
 
-    private String avatar;
+    private String avatar = "";
 
     private Integer role;
 

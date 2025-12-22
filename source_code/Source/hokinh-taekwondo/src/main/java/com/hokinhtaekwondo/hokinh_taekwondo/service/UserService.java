@@ -190,7 +190,7 @@ public class UserService implements UserDetailsService {
         }
         List<UserManagementDTO> result = null;
         if(user.getRole() == 0) {
-            result = userRepository.findByFacility_Id(facilityId)
+            result = userRepository.findUsersByFacilityForClubHead(facilityId)
                     .stream()
                     .map(this::toManagementResponseDTO)
                     .toList();
@@ -360,6 +360,7 @@ public class UserService implements UserDetailsService {
         dto.setDateOfBirth(user.getDateOfBirth());
         dto.setEmail(user.getEmail());
         dto.setAvatar(user.getAvatar());
+        dto.setIsActive((user.getIsActive()));
         dto.setRole((user.getRole()));
         dto.setBeltLevel(String.valueOf(user.getBeltLevel()));
         dto.setFacilityId(user.getFacility() != null ? user.getFacility().getId() : null);
