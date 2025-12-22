@@ -3,6 +3,7 @@ package com.hokinhtaekwondo.hokinh_taekwondo.controller;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.user.imports.UserImportResult;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.JwtService;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.export.UserImportErrorFileGenerator;
@@ -41,6 +42,8 @@ public class UserController {
     private ValidateService validateService;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private UserRepository userRepository;
 
 
     @PostMapping("/login")
@@ -158,18 +161,6 @@ public class UserController {
             BindingResult bindingResult,
             HttpSession session,
             @CookieValue(value = "token", required = false) String token) throws Exception {
-
-//        User currentUser = userService.getCurrentUser(session, token);
-//        if (currentUser == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body("Hãy đăng nhập trước khi thực hiện.");
-//        }
-//
-//        // Chỉ chủ nhiệm hoặc quản lý hệ thống mới được thêm người
-//        if (currentUser.getRole() > 1) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                    .body("Bạn không có quyền thêm người dùng.");
-//        }
 
         // Kiểm tra lỗi DTO
         if (bindingResult.hasErrors()) {
@@ -295,6 +286,83 @@ public class UserController {
         }
         catch (Exception e) {
             return  ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+    @GetMapping("/admin/get-facility-users")
+    public ResponseEntity<?> getFacilityUsers(@AuthenticationPrincipal User user,
+                                              @RequestParam Integer facilityId) {
+        try {
+            return ResponseEntity.ok(userService.getUserByFacilityId(facilityId, user));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/admin/get-non-facility-students")
+    public ResponseEntity<?> getNonFacilityStudents(@AuthenticationPrincipal User user,
+                                              @RequestParam Integer facilityId) {
+        try {
+            return ResponseEntity.ok(userService.getStudentsNonFacility(user));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/admin/create-manager")
+    public ResponseEntity<?> createManager(@AuthenticationPrincipal User clubHead,
+                                           @RequestBody ManagerCreateDTO managerCreateDTO) {
+        try {
+            return ResponseEntity.ok(userService.createManager(managerCreateDTO, clubHead));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/admin/delete-user-by-id")
+    public ResponseEntity<?> deleteUserById(@AuthenticationPrincipal User user,
+                                            @RequestParam String deleteUserId) {
+        try {
+            userService.deleteUserById(deleteUserId, user);
+            return ResponseEntity.ok("Người dùng đã được xóa khỏi hệ thống");
+        }
+        catch(Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/admin/update-user")
+    public ResponseEntity<?> updateUser(@AuthenticationPrincipal User user,
+                                        @RequestBody UserManagementDTO updatedUserDTO) {
+        try {
+            userService.updateUserByAdmin(updatedUserDTO, user);
+            return ResponseEntity.ok("Người dùng cập nhật thành công");
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/admin/update-user-active-status")
+    public ResponseEntity<?> updateUserActiveStatus(@AuthenticationPrincipal User author,
+                                            @RequestParam String userId,
+                                            @RequestParam Boolean active) {
+        try {
+            userService.updateActiveStatus(userId, author, active);
+            if(active) {
+                return ResponseEntity.ok("Người dùng đã được chuyển sang trạng thái hoạt động. Người dùng đã có thể truy cập hệ thống");
+            }
+            return ResponseEntity.ok("Người dùng đã bị chuyển sang trạng thái ngưng hoạt động. Người dùng sẽ không thể truy cập hệ thống");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(e.getMessage());
         }
     }

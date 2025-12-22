@@ -183,20 +183,113 @@ public class UserService implements UserDetailsService {
         return facility.getManager().getId().equals(currentUserId);
     }
 
-    public Page<UserManagementDTO> getUserByFacilityId(int facilityId, User user, int page, int size) {
+    public List<UserManagementDTO> getUserByFacilityId(int facilityId, User user) {
         Facility facility = facilityRepository.findById(facilityId).orElse(null);
         if(!ValidateRole.isResponsibleForFacility(user, facility != null ? facility.getManager() : null)) {
             throw new RuntimeException("Bạn không có quyền xem những người dùng này");
         }
-        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        Page<UserManagementDTO> result = null;
+        List<UserManagementDTO> result = null;
         if(user.getRole() == 0) {
-            result = userRepository.findByFacility_Id(facilityId, pageable).map(this::toManagementResponseDTO);
+            result = userRepository.findByFacility_Id(facilityId)
+                    .stream()
+                    .map(this::toManagementResponseDTO)
+                    .toList();
         }
         else if(user.getRole() == 1) {
-            result = userRepository.findUsersByFacilityIdForManager(facilityId, pageable).map(this::toManagementResponseDTO);
+            result = userRepository.findUsersByFacilityIdForManager(facilityId)
+                    .stream()
+                    .map(this::toManagementResponseDTO)
+                    .toList();
         }
         return result;
+    }
+
+    public List<UserManagementDTO> getStudentsNonFacility(User user) {
+        if(user.getRole() == 0 || user.getRole() == 1) {
+            return userRepository.findByFacilityIsNullAndRoleEquals(4)
+                    .stream()
+                    .map(this::toManagementResponseDTO)
+                    .toList();
+        }
+        throw new RuntimeException("Không có quyền tìm kiếm người dùng");
+    }
+
+    public void deleteUserById(String id, User deleteAuthor) {
+        if(deleteAuthor.getRole() > 1) {
+            throw new RuntimeException("Không có quyền xóa người dùng");
+        }
+        User deletedUser = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng " + id));
+        User facilityManagerOfDeletedUser = deletedUser.getFacility() != null ? deletedUser.getFacility().getManager() : null;
+        if((facilityManagerOfDeletedUser == null || ValidateRole.isResponsibleForFacility(deleteAuthor, facilityManagerOfDeletedUser))
+            && deletedUser.getRole() > deleteAuthor.getRole()) {
+            if(deletedUser.getRole() == 1) {
+                List<Facility> responsibleFacilities = facilityRepository.findAllByManager_Id(id);
+                if(!responsibleFacilities.isEmpty()) {
+                    StringBuilder facilityNames = new StringBuilder();
+                    for(Facility facility : responsibleFacilities) {
+                        facilityNames.append(facility.getName()).append(", ");
+                    }
+                    throw new RuntimeException("Người dùng hiện đang quản lý các cơ sở: " + facilityNames.substring(0, facilityNames.length() - 2) + ". Vui lòng gỡ quyền quản lý cơ sở cho người dùng trước khi xóa");
+                }
+            }
+            userRepository.delete(deletedUser);
+        }
+    }
+
+    @Transactional
+    public ManagerCreateResponse createManager(ManagerCreateDTO manager, User creator) {
+        if(creator.getRole() != 0) throw new RuntimeException("Bạn không có quyền thêm quản lý");
+        Integer index = userRepository.countByRole(1);
+        User createdManager = new User();
+        createdManager.setId("quan_ly_" + index);
+        createdManager.setRole(1);
+        createdManager.setName(manager.getName());
+        createdManager.setPassword(manager.getPassword());
+        createdManager.setDateOfBirth(manager.getDateOfBirth());
+        createdManager.setPhoneNumber(manager.getPhoneNumber());
+        createdManager.setEmail(manager.getEmail());
+        createdManager.setAvatar(manager.getAvatar());
+        return new ManagerCreateResponse(userRepository.save(createdManager));
+    }
+
+    @Transactional
+    public void updateUserByAdmin(UserManagementDTO updatedUserDTO, User updateAuthor) {
+        if(updateAuthor.getRole() > 1) {
+            throw new RuntimeException("Không có quyền xóa người dùng");
+        }
+        User updatedUser = userRepository.findById(updatedUserDTO.getId()).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng " + updatedUserDTO.getId()));
+        User facilityManagerOfUpdatedUser = updatedUser.getFacility() != null ? updatedUser.getFacility().getManager() : null;
+        if((facilityManagerOfUpdatedUser == null || ValidateRole.isResponsibleForFacility(updateAuthor, facilityManagerOfUpdatedUser))
+                && updatedUser.getRole() > updateAuthor.getRole()) {
+            if((updatedUser.getRole() == 2 || updatedUser.getRole() == 3)
+                    && (updatedUserDTO.getRole() == 2 || updatedUserDTO.getRole() == 3)) {
+                facilityRepository.findById(updatedUserDTO.getFacilityId()).ifPresent(updatedUser::setFacility);
+                updatedUser.setRole(updatedUserDTO.getRole());
+            }
+            updatedUser.setName(updatedUserDTO.getName());
+            updatedUser.setPassword(updatedUserDTO.getPassword());
+            updatedUser.setDateOfBirth(updatedUserDTO.getDateOfBirth());
+            updatedUser.setPhoneNumber(updatedUserDTO.getPhoneNumber());
+            updatedUser.setEmail(updatedUserDTO.getEmail());
+            updatedUser.setAvatar(updatedUserDTO.getAvatar());
+            updatedUser.setBeltLevel(updatedUserDTO.getBeltLevel());
+        }
+    }
+
+    @Transactional
+    public void updateActiveStatus(String userId, User author, Boolean active) {
+        if(author.getRole() > 1) {
+            throw new RuntimeException("Không có quyền thực hiện chức năng này");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người dùng"));
+        if(author.getRole() < user.getRole()) {
+            user.setIsActive(active);
+            if(!active) {
+                // Log out if user is inactivated
+                user.setLoginPin(user.getLoginPin()+1);
+            }
+        }
     }
 
     public String upLoadImage(MultipartFile imageFile, String userId) throws IOException {

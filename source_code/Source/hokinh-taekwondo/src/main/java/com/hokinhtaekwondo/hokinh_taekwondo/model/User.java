@@ -2,6 +2,8 @@ package com.hokinhtaekwondo.hokinh_taekwondo.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -48,7 +50,9 @@ public class User implements UserDetails {
     private Timestamp createdAt;
 
     // Role (0: club_head, 1: manager, 2: coach, 3: instructor, 4: student)
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
+    @Min(value = 0, message = "Chức danh không hợp lệ")
+    @Max(value = 4, message = "Chức danh không hợp lệ")
     private Integer role;
 
     @Column(name = "belt_level", length = 100)
@@ -63,7 +67,7 @@ public class User implements UserDetails {
     private Facility facility;
 
     @Column
-    private Integer loginPin;
+    private Integer loginPin = 0;
 
 
     // ================================================================

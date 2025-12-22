@@ -1,6 +1,4 @@
 package com.hokinhtaekwondo.hokinh_taekwondo.utils;
-
-import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 
 public final class ValidateRole {

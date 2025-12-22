@@ -36,7 +36,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     Page<User> findByIsActiveTrueAndRoleEqualsAndNameContainingIgnoreCase(int role, String searchKey,Pageable pageable);
     @Query("SELECT u.id FROM User u WHERE (u.role = 0 OR u.role = 1) AND u.id IN :ids")
     List<String> existManagerOrClubHead(@Param("ids") List<String> ids);
-    Page<User> findByFacility_Id(Integer id, Pageable pageable);
+    List<User> findByFacility_Id(Integer id);
     @Query("""
     SELECT u 
     FROM User u
@@ -44,6 +44,9 @@ public interface UserRepository extends JpaRepository<User, String> {
     WHERE fac.id = :facilityId
     AND u.role > 1
     """)
-    Page<User> findUsersByFacilityIdForManager(@Param("facilityId") Integer facilityId,
-                                               Pageable pageable);
+    List<User> findUsersByFacilityIdForManager(@Param("facilityId") Integer facilityId);
+
+    List<User> findByFacilityIsNullAndRoleEquals(Integer role);
+
+    Integer countByRole(Integer role);
 }
