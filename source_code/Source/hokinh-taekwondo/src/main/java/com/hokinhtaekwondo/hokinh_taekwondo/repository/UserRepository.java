@@ -40,16 +40,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     SELECT u 
     FROM User u
     JOIN FETCH u.facility fac
-    WHERE (fac.id = :facilityId AND u.role > 1
-    OR u.role = 1) AND u.isActive = :isActive
-    """)
-    Page<User> findUsersByFacilityForClubHead(@Param("facilityId") Integer facilityId,
-                                              @Param("isActive") Boolean isActive,
-                                              Pageable pageable);
-    @Query("""
-    SELECT u 
-    FROM User u
-    JOIN FETCH u.facility fac
     WHERE (fac.id = :facilityId
     AND u.role > 1) AND u.isActive = :isActive
     """)
@@ -71,7 +61,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("""
     SELECT u 
     FROM User u
-    WHERE u.role != 0 
+    WHERE u.role > 1 
         AND (
             LOWER(u.name) LIKE LOWER(CONCAT('%', :searchKey, '%'))
             OR LOWER(u.id) LIKE LOWER(CONCAT('%', :searchKey, '%'))
@@ -85,7 +75,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     SELECT u 
     FROM User u
     JOIN FETCH u.facility fac       
-    WHERE u.role != 0 
+    WHERE u.role > 1 
         AND (
             LOWER(u.name) LIKE LOWER(CONCAT('%', :searchKey, '%'))
             OR LOWER(u.id) LIKE LOWER(CONCAT('%', :searchKey, '%'))
@@ -155,6 +145,8 @@ public interface UserRepository extends JpaRepository<User, String> {
             Boolean isActive,
             Pageable pageable
     );
+
+    Page<User> findAllByIsActiveAndRoleGreaterThan(Boolean isActive, Integer role, Pageable pageable);
 
     Integer countByRole(Integer role);
 }

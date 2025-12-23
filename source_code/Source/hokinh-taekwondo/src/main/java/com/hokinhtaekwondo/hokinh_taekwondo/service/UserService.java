@@ -176,16 +176,8 @@ public class UserService implements UserDetailsService {
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         System.out.println("page: " + page);
-        Page<UserManagementDTO> result = null;
-        if(user.getRole() == 0) {
-            result = userRepository.findUsersByFacilityForClubHead(facilityId, isActive, pageable)
+        return userRepository.findUsersByFacilityIdForManager(facilityId, isActive, pageable)
                     .map(this::toManagementResponseDTO);
-        }
-        else if(user.getRole() == 1) {
-            result = userRepository.findUsersByFacilityIdForManager(facilityId, isActive, pageable)
-                    .map(this::toManagementResponseDTO);
-        }
-        return result;
     }
 
     public Page<UserManagementDTO> getAllUsersByManager(Boolean isActive, User user, int page, int size) {
@@ -194,7 +186,7 @@ public class UserService implements UserDetailsService {
         }
         Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
         if(user.getRole() == 0) {
-            return userRepository.findAll(pageable)
+            return userRepository.findAllByIsActiveAndRoleGreaterThan(isActive, 1, pageable)
                     .map(this::toManagementResponseDTO);
         }
         else if(user.getRole() == 1) {
