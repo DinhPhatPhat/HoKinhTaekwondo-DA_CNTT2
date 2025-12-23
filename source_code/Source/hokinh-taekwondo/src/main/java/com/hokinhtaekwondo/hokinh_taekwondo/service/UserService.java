@@ -26,7 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -159,22 +158,6 @@ public class UserService implements UserDetailsService {
         return userRepository.existsById(id);
     }
 
-    // Wrong id or password -> 0
-    // Correct email and password and is inactive-> 1
-    // Correct email and password and is active-> 2
-    public int checkLogin(String id, String password){
-        Optional<User> user = userRepository.findById(id);
-        if(user.isPresent() && user.get().getPassword().equals(password)){
-            if(user.get().getIsActive()){
-                return 2;
-            }
-            else{
-                return 1;
-            }
-        }
-        return 0;
-    }
-
     public boolean isManagerOfFacility(String currentUserId, int facilityId) {
         Facility facility = facilityRepository.findById(facilityId).orElse(null);
         if (facility == null) {
@@ -183,33 +166,121 @@ public class UserService implements UserDetailsService {
         return facility.getManager().getId().equals(currentUserId);
     }
 
-    public List<UserManagementDTO> getUserByFacilityId(int facilityId, User user) {
+    public Page<UserManagementDTO> getUserByFacilityId(int facilityId, Boolean isActive, User user, int page, int size) {
+        if(size > 40) {
+            throw new  IllegalArgumentException("Mỗi trang không được vượt quá 40");
+        }
         Facility facility = facilityRepository.findById(facilityId).orElse(null);
         if(!ValidateRole.isResponsibleForFacility(user, facility != null ? facility.getManager() : null)) {
             throw new RuntimeException("Bạn không có quyền xem những người dùng này");
         }
-        List<UserManagementDTO> result = null;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        System.out.println("page: " + page);
+        Page<UserManagementDTO> result = null;
         if(user.getRole() == 0) {
-            result = userRepository.findUsersByFacilityForClubHead(facilityId)
-                    .stream()
-                    .map(this::toManagementResponseDTO)
-                    .toList();
+            result = userRepository.findUsersByFacilityForClubHead(facilityId, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
         }
         else if(user.getRole() == 1) {
-            result = userRepository.findUsersByFacilityIdForManager(facilityId)
-                    .stream()
-                    .map(this::toManagementResponseDTO)
-                    .toList();
+            result = userRepository.findUsersByFacilityIdForManager(facilityId, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
         }
         return result;
     }
 
-    public List<UserManagementDTO> getStudentsNonFacility(User user) {
-        if(user.getRole() == 0 || user.getRole() == 1) {
-            return userRepository.findByFacilityIsNullAndRoleEquals(4)
+    public Page<UserManagementDTO> getAllUsersByManager(Boolean isActive, User user, int page, int size) {
+        if(size > 40) {
+            throw new  IllegalArgumentException("Mỗi trang không được vượt quá 40");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        if(user.getRole() == 0) {
+            return userRepository.findAll(pageable)
+                    .map(this::toManagementResponseDTO);
+        }
+        else if(user.getRole() == 1) {
+            List<Integer> facilities = facilityRepository.findAllByManager_Id(user.getId())
+                    .stream().map(Facility::getId).toList();
+            return userRepository.findAllUsersInFacilities(facilities, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
+        }
+        return null;
+    }
+
+    public Page<UserManagementDTO> searchAllUsersByIdAndName(
+            User user, String searchKey, Boolean isActive, int page, int size) {
+
+        if (size > 40) {
+            throw new IllegalArgumentException("Mỗi trang không được vượt quá 40");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+
+        // Club head
+        if (user.getRole() == 0) {
+            return userRepository
+                    .findAllUserBySearchKeyForClubHead(searchKey, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
+        }
+
+        // Manager
+        if (user.getRole() == 1) {
+            List<Integer> facilities = facilityRepository
+                    .findAllByManager_Id(user.getId())
                     .stream()
-                    .map(this::toManagementResponseDTO)
+                    .map(Facility::getId)
                     .toList();
+            if (facilities.isEmpty()) {
+                return Page.empty(pageable);
+            }
+
+            return userRepository
+                    .findAllUserBySearchKeyForManager(searchKey, facilities, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
+        }
+
+        return Page.empty(pageable);
+    }
+
+
+    public Page<UserManagementDTO> searchUsersInFacilityByIdAndName(int facilityId, Boolean isActive, User user, String searchKey, int page, int size) {
+        if(size > 40) {
+            throw new  IllegalArgumentException("Mỗi trang không được vượt quá 40");
+        }
+        Facility facility = facilityRepository.findById(facilityId).orElse(null);
+        if(!ValidateRole.isResponsibleForFacility(user, facility != null ? facility.getManager() : null)) {
+            throw new RuntimeException("Bạn không có quyền xem những người dùng này");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+
+        if(user.getRole() == 0) {
+            return userRepository.findAllFacilityUserBySearchKeyForClubHead(searchKey, facilityId, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
+        }
+        else if(user.getRole() == 1) {
+            return userRepository.findAllFacilityUserBySearchKeyForManager(searchKey, facilityId, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
+        }
+        return null;
+    }
+
+    public Page<UserManagementDTO> searchStudentsNonFacility(Boolean isActive, User user, String searchKey, int page, int size) {
+        if(size > 40) {
+            throw new IllegalArgumentException("Mỗi trang không được vượt quá 40");
+        }
+        if(user.getRole() != 0 && user.getRole() != 1) {
+            throw new RuntimeException("Không có quyền xem thông tin người dùng");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+
+        return userRepository.searchAllNonFacilityUserWithRole(searchKey, 4, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
+    }
+
+    public Page<UserManagementDTO> getStudentsNonFacility(Boolean isActive, User user, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        if(user.getRole() == 0 || user.getRole() == 1) {
+            return userRepository.findByFacilityIsNullAndRoleAndIsActive(4, isActive, pageable)
+                    .map(this::toManagementResponseDTO);
         }
         throw new RuntimeException("Không có quyền tìm kiếm người dùng");
     }
@@ -290,14 +361,6 @@ public class UserService implements UserDetailsService {
                 user.setLoginPin(user.getLoginPin()+1);
             }
         }
-    }
-
-    public String upLoadImage(MultipartFile imageFile, String userId) throws IOException {
-
-        String uploadDir = "uploads/image/user/";
-        String accessPath = "/uploads/image/user/";
-
-        return UploadService.upLoadImage(imageFile, userId, uploadDir, accessPath);
     }
 
     public User getCurrentUser(HttpSession session, String token) {

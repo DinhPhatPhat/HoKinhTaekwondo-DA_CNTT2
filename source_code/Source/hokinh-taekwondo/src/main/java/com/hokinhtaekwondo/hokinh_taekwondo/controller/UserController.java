@@ -291,9 +291,72 @@ public class UserController {
     }
     @GetMapping("/admin/get-facility-users")
     public ResponseEntity<?> getFacilityUsers(@AuthenticationPrincipal User user,
-                                              @RequestParam Integer facilityId) {
+                                              @RequestParam Integer facilityId,
+                                              @RequestParam Boolean isActive,
+                                              @RequestParam Integer page,
+                                              @RequestParam Integer size) {
         try {
-            return ResponseEntity.ok(userService.getUserByFacilityId(facilityId, user));
+            return ResponseEntity.ok(userService.getUserByFacilityId(facilityId, isActive, user, page, size));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/admin/get-all-users")
+    public ResponseEntity<?> getAllUsers(@AuthenticationPrincipal User user,
+                                         @RequestParam Boolean isActive,
+                                         @RequestParam Integer page,
+                                              @RequestParam Integer size) {
+        try {
+            return ResponseEntity.ok(userService.getAllUsersByManager(isActive, user, page, size));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/admin/search-all-users")
+    public ResponseEntity<?> getAllUsersBySearch(@AuthenticationPrincipal User user,
+                                                @RequestParam String searchKey,
+                                                @RequestParam Boolean isActive,
+                                                 @RequestParam Integer page,
+                                                @RequestParam Integer size) {
+        try {
+            return ResponseEntity.ok(userService.searchAllUsersByIdAndName(user, searchKey, isActive, page, size));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/admin/search-all-facility-users")
+    public ResponseEntity<?> getAllUsersBySearch(@AuthenticationPrincipal User user,
+                                                 @RequestParam Integer facilityId,
+                                                 @RequestParam String searchKey,
+                                                 @RequestParam Boolean isActive,
+                                                 @RequestParam Integer page,
+                                                 @RequestParam Integer size) {
+        try {
+            return ResponseEntity.ok(userService.searchUsersInFacilityByIdAndName(facilityId, isActive, user, searchKey, page, size));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/admin/search-non-facility-students")
+    public ResponseEntity<?> getAllNonFacilityStudents(@AuthenticationPrincipal User user,
+                                                 @RequestParam String searchKey,
+                                                 @RequestParam Boolean isActive,
+                                                 @RequestParam Integer page,
+                                                 @RequestParam Integer size) {
+        try {
+            return ResponseEntity.ok(userService.searchStudentsNonFacility(isActive, user, searchKey, page, size));
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -303,9 +366,11 @@ public class UserController {
 
     @GetMapping("/admin/get-non-facility-students")
     public ResponseEntity<?> getNonFacilityStudents(@AuthenticationPrincipal User user,
-                                              @RequestParam Integer facilityId) {
+                                                    @RequestParam Boolean isActive,
+                                                    @RequestParam Integer page,
+                                                    @RequestParam Integer size) {
         try {
-            return ResponseEntity.ok(userService.getStudentsNonFacility(user));
+            return ResponseEntity.ok(userService.getStudentsNonFacility(isActive, user, page, size));
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
