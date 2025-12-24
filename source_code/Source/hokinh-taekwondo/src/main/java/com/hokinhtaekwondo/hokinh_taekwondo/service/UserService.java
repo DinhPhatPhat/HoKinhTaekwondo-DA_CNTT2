@@ -199,11 +199,11 @@ public class UserService implements UserDetailsService {
     }
 
     public List<ManagerManagementDTO> getAllManagers(User user, Boolean isActive) {
+        System.out.println(isActive);
         if(user.getRole() != 0) {
             throw new RuntimeException("Bạn không có quyền xem quản lý");
         }
         List<User> lstManagers = userRepository.findAllByRoleAndIsActive(1, isActive);
-        System.out.println("lstManagers: " + lstManagers.getFirst().getName());
         List<Facility>  lstFacilities = facilityRepository.findAll();
         HashMap<String, List<String>> responsibleFacilities = new HashMap<>();
 
@@ -229,6 +229,7 @@ public class UserService implements UserDetailsService {
             dto.setFacilityNames(responsibleFacilities.get(manager.getId()));
             result.add(dto);
         }
+
         return result;
     }
 
@@ -395,7 +396,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void updateActiveStatus(String userId, User author, Boolean active) {
+    public void updateActiveStatus(String userId, User author, Boolean active) throws Exception {
         if(author.getRole() > 1) {
             throw new RuntimeException("Không có quyền thực hiện chức năng này");
         }
@@ -411,6 +412,7 @@ public class UserService implements UserDetailsService {
                         for(Facility facility : responsibleFacilities) {
                             facilityNames.append(facility.getName()).append(", ");
                         }
+                        System.out.println(facilityNames);
                         throw new RuntimeException("Người dùng hiện đang quản lý các cơ sở: " + facilityNames.substring(0, facilityNames.length() - 2) + ". Vui lòng gỡ quyền quản lý cơ sở cho người dùng trước khi vô hiệu hóa tài khoản");
                     }
                 }
