@@ -2,18 +2,16 @@ package com.hokinhtaekwondo.hokinh_taekwondo.security;
 
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -26,38 +24,56 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private final UserService userService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, UsernameNotFoundException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
+
         if (header != null && header.startsWith("Bearer ")) {
-            // Remove bearer_
             String token = header.substring(7);
 
-            String userId = jwtProvider.extractUserId(token);
-            User userDetails = userService.loadUserByUsername(userId);
-            System.out.println("Authentication Filter Called");
-            System.out.println(userDetails.getAuthorities());
+            try {
+                String userId = jwtProvider.extractUserId(token);
+                User userDetails = userService.loadUserByUsername(userId);
+                System.out.println("Authentication Filter Called");
+                System.out.println(userDetails.getAuthorities());
 
-            Integer jwtLoginPin = jwtProvider.extractLoginPin(token);
-            Integer currentLoginPin = userDetails.getLoginPin();
+                Integer jwtLoginPin = jwtProvider.extractLoginPin(token);
+                Integer currentLoginPin = userDetails.getLoginPin();
 
-            if(Objects.equals(jwtLoginPin, currentLoginPin)) {
-                // Not authenticate user if they were banned
-                if(!userDetails.isEnabled()) {
-                    throw new RuntimeException("Tài khoản của bạn đã bị khóa. Hãy liên hệ quản lý để mở khóa");
+                if(Objects.equals(jwtLoginPin, currentLoginPin)) {
+                    if(!userDetails.isEnabled()) {
+                        sendErrorResponse(response, HttpServletResponse.SC_FORBIDDEN, "Tài khoản của bạn đã bị khóa. Hãy liên hệ quản lý để mở khóa");
+                        return;
+                    }
+
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Phiên đăng nhập đã hết. Vui lòng đăng nhập lại");
+                    return;
                 }
-                // Prepare the authentication info to send to controller
-                UsernamePasswordAuthenticationToken auth =  new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                // Send authentication to controller
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
-            else {
-                throw new RuntimeException("Phiên đăng nhập đã hết. Vui lòng đăng nhập lại");
+            } catch (ExpiredJwtException e) {
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token đã hết hạn. Vui lòng đăng nhập lại");
+                return;
+            } catch (JwtException e) {
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Token không hợp lệ");
+                return;
+            } catch (UsernameNotFoundException e) {
+                sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Người dùng không tồn tại");
+                return;
             }
         }
+
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format("{\"error\": \"%s\"}", message));
     }
 }

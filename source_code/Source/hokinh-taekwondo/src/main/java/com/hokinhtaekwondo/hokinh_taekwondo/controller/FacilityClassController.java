@@ -37,17 +37,6 @@ public class FacilityClassController {
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Hãy đăng nhập trước khi thực hiện.");
-//        }
-//        if (user.getRole() > 1) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền tạo lớp.");
-//        }
-
-//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), dto.getFacilityId())) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không quản lý cơ sở này.");
-//        }
 
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;

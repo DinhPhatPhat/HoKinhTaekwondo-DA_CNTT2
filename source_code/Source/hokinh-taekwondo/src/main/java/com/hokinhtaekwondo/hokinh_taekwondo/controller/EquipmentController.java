@@ -65,16 +65,6 @@ public class EquipmentController {
                                     BindingResult bindingResult,
                                     HttpSession session,
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Hãy đăng nhập.");
-//        }
-//        if (user.getRole() > 1) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền cập nhật thiết bị.");
-//        }
-//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), dto.getFacilityId())) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không quản lý cơ sở này.");
-//        }
 
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
@@ -121,23 +111,6 @@ public class EquipmentController {
 
     @GetMapping("/admin")
     public ResponseEntity<?> getEquipments(HttpSession session,@CookieValue(value = "token", required = false) String token) throws Exception{
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body("Vui lòng đăng nhập.");
-//        }
-//        else if (user.getRole() == 0) {
-//            List<EquipmentDTO> equipments = equipmentService.getAllEquipments();
-//            return ResponseEntity.ok(equipments);
-//        }
-//        else if (user.getRole() == 1) {
-//            List<EquipmentDTO> equipments = equipmentService.getEquipmentsByManagerId(user.getId());
-//            return ResponseEntity.ok(equipments);
-//        }
-//        else {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body("Bạn không có quyền xem các thiết bị.");
-//        }
         List<EquipmentDTO> equipments = equipmentService.getAllEquipments();
         return ResponseEntity.ok(equipments);
     }

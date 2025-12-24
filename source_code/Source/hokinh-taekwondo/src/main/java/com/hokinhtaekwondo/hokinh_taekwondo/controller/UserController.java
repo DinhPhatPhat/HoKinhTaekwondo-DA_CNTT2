@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.parameters.P;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -73,7 +74,7 @@ public class UserController {
                 return ResponseEntity.ok("Đăng nhập thành công");
             }
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Thông tin đăng nhập không hợp lệ");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Thông tin đăng nhập không hợp lệ");
     }
 
 
@@ -84,7 +85,7 @@ public class UserController {
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
         User user = userService.getCurrentUser(session, token);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Vui lòng đăng nhập.");
         }
         if (user.getRole() > 1 || user.getRole() >= userCreateDTO.getRole()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền tạo người dùng này.");
@@ -123,7 +124,7 @@ public class UserController {
                                     @CookieValue(value = "token", required = false) String token) throws Exception {
 //        User user = userService.getCurrentUser(session, token);
 //        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập");
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Vui lòng đăng nhập");
 //        }
 //        //Coach or Instructor
 //        if (user.getRole() > 1 && !Objects.equals(user.getId(), userUpdateDTO.getId())) {
@@ -285,7 +286,7 @@ public class UserController {
                     .body(errorFile);
         }
         catch (Exception e) {
-            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return  ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -299,7 +300,7 @@ public class UserController {
             return ResponseEntity.ok(userService.getUserByFacilityId(facilityId, isActive, user, page, size));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -313,7 +314,7 @@ public class UserController {
             return ResponseEntity.ok(userService.getAllUsersByManager(isActive, user, page, size));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -328,7 +329,7 @@ public class UserController {
             return ResponseEntity.ok(userService.searchAllUsersByIdAndName(user, searchKey, isActive, page, size));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -344,7 +345,7 @@ public class UserController {
             return ResponseEntity.ok(userService.searchUsersInFacilityByIdAndName(facilityId, isActive, user, searchKey, page, size));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -359,7 +360,7 @@ public class UserController {
             return ResponseEntity.ok(userService.searchStudentsNonFacility(isActive, user, searchKey, page, size));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -373,7 +374,7 @@ public class UserController {
             return ResponseEntity.ok(userService.getStudentsNonFacility(isActive, user, page, size));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -385,7 +386,7 @@ public class UserController {
             return ResponseEntity.ok(userService.createManager(managerCreateDTO, clubHead));
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -398,7 +399,7 @@ public class UserController {
             return ResponseEntity.ok("Người dùng đã được xóa khỏi hệ thống");
         }
         catch(Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -411,7 +412,7 @@ public class UserController {
             return ResponseEntity.ok("Người dùng cập nhật thành công");
         }
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }
@@ -427,7 +428,31 @@ public class UserController {
             }
             return ResponseEntity.ok("Người dùng đã bị chuyển sang trạng thái ngưng hoạt động. Người dùng sẽ không thể truy cập hệ thống");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/admin/get-all-managers")
+    public ResponseEntity<?> getAllManagers(@AuthenticationPrincipal User clubHead,
+                                            @RequestParam Boolean isActive) {
+        try {
+            return ResponseEntity.ok(userService.getAllManagers(clubHead, isActive));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/admin/update-manager")
+    public ResponseEntity<?> updateManager(@AuthenticationPrincipal User clubHead,
+                                           @RequestBody ManagerManagementDTO managerInfo) {
+        try {
+            return ResponseEntity.ok(userService.updateManager(managerInfo, clubHead));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(e.getMessage());
         }
     }

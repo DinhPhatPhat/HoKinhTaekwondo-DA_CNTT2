@@ -28,7 +28,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(userId)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)) // 20 days
+                .expiration(new Date(System.currentTimeMillis() + 10000)) // 20 days
                 .claim("loginPin", loginPin)
                 .signWith(key)
                 .compact();

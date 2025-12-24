@@ -78,15 +78,6 @@ public class SessionController {
             HttpSession session,
             @CookieValue(value = "token", required = false) String token) throws Exception {
 
-        User currentUser = userService.getCurrentUser(session, token);
-        if (currentUser == null)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Hãy đăng nhập trước khi thực hiện.");
-
-        if (currentUser.getRole() > 1)
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Bạn không có quyền chỉnh sửa buổi học.");
-
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
 

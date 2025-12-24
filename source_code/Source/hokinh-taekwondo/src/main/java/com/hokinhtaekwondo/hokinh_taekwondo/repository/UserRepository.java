@@ -18,7 +18,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u.id FROM User u WHERE u.id IN :ids")
     List<String> findExistingIds(@Param("ids") List<String> ids);
 
-    List<User> findAllByRole(Integer role);
+    List<User> findAllByRoleAndIsActiveTrue(Integer role);
     Long countById(String id);
 
     @Query("""
@@ -137,8 +137,7 @@ public interface UserRepository extends JpaRepository<User, String> {
                                                         @Param("facilityId") Integer facilityId,
                                                         @Param("isActive") Boolean isActive,
                                                         Pageable pageable);
-
-
+    List<User> findAllByRoleAndIsActive(Integer role, Boolean isActive);
 
     Page<User> findByFacilityIsNullAndRoleAndIsActive(
             Integer role,

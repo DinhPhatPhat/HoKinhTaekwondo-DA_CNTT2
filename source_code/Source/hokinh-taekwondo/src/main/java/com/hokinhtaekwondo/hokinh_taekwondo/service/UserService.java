@@ -198,6 +198,40 @@ public class UserService implements UserDetailsService {
         return null;
     }
 
+    public List<ManagerManagementDTO> getAllManagers(User user, Boolean isActive) {
+        if(user.getRole() != 0) {
+            throw new RuntimeException("Bạn không có quyền xem quản lý");
+        }
+        List<User> lstManagers = userRepository.findAllByRoleAndIsActive(1, isActive);
+        System.out.println("lstManagers: " + lstManagers.getFirst().getName());
+        List<Facility>  lstFacilities = facilityRepository.findAll();
+        HashMap<String, List<String>> responsibleFacilities = new HashMap<>();
+
+        for(Facility facility : lstFacilities) {
+            User manager = facility.getManager();
+            if(manager != null) {
+                if(!responsibleFacilities.containsKey(manager.getId())) {
+                    responsibleFacilities.putIfAbsent(manager.getId(), new ArrayList<String>());
+                }
+                responsibleFacilities.get(manager.getId()).add(facility.getName());
+            }
+        }
+
+        List<ManagerManagementDTO> result = new ArrayList<>();
+        for(User manager : lstManagers) {
+            ManagerManagementDTO dto = new ManagerManagementDTO();
+            dto.setId(manager.getId());
+            dto.setName(manager.getName());
+            dto.setAvatar(manager.getAvatar());
+            dto.setEmail(manager.getEmail());
+            dto.setDateOfBirth(manager.getDateOfBirth());
+            dto.setPhoneNumber(manager.getPhoneNumber());
+            dto.setFacilityNames(responsibleFacilities.get(manager.getId()));
+            result.add(dto);
+        }
+        return result;
+    }
+
     public Page<UserManagementDTO> searchAllUsersByIdAndName(
             User user, String searchKey, Boolean isActive, int page, int size) {
 
@@ -307,12 +341,33 @@ public class UserService implements UserDetailsService {
         createdManager.setId("quan_ly_" + index);
         createdManager.setRole(1);
         createdManager.setName(manager.getName());
-        createdManager.setPassword(manager.getPassword());
+        createdManager.setPassword(passwordEncoder.encode(manager.getPassword()));
         createdManager.setDateOfBirth(manager.getDateOfBirth());
         createdManager.setPhoneNumber(manager.getPhoneNumber());
         createdManager.setEmail(manager.getEmail());
         createdManager.setAvatar(manager.getAvatar());
         return new ManagerCreateResponse(userRepository.save(createdManager));
+    }
+
+    @Transactional
+    public ManagerCreateResponse updateManager(ManagerManagementDTO manager, User updateAuthor) {
+        if(updateAuthor.getRole() != 0) {
+            throw new RuntimeException("Không cho phép chỉnh sửa người dùng này");
+        }
+        User updatedManager = userRepository.findById(manager.getId()).orElseThrow(() -> new RuntimeException("Không tìm thấy quản lý"));
+        if(manager.getPhoneNumber().length() == 10 || manager.getPhoneNumber().isEmpty()) {
+            updatedManager.setPhoneNumber(manager.getPhoneNumber());
+        }
+        if(manager.getEmail().contains("@")) {
+            updatedManager.setEmail(manager.getEmail());
+        }
+        if(manager.getPassword().length() >= 8) {
+            updatedManager.setPassword(passwordEncoder.encode(manager.getPassword()));
+        }
+        updatedManager.setDateOfBirth(manager.getDateOfBirth());
+        updatedManager.setName(manager.getName());
+        updatedManager.setAvatar(manager.getAvatar());
+        return new ManagerCreateResponse(userRepository.save(updatedManager));
     }
 
     @Transactional
@@ -330,7 +385,7 @@ public class UserService implements UserDetailsService {
                 updatedUser.setRole(updatedUserDTO.getRole());
             }
             updatedUser.setName(updatedUserDTO.getName());
-            updatedUser.setPassword(updatedUserDTO.getPassword());
+            updatedUser.setPassword(passwordEncoder.encode(updatedUserDTO.getPassword()));
             updatedUser.setDateOfBirth(updatedUserDTO.getDateOfBirth());
             updatedUser.setPhoneNumber(updatedUserDTO.getPhoneNumber());
             updatedUser.setEmail(updatedUserDTO.getEmail());
@@ -349,6 +404,16 @@ public class UserService implements UserDetailsService {
         if(author.getRole() < user.getRole()) {
             user.setIsActive(active);
             if(!active) {
+                if(user.getRole() == 1) {
+                    List<Facility> responsibleFacilities = facilityRepository.findAllByManager_Id(userId);
+                    if(!responsibleFacilities.isEmpty()) {
+                        StringBuilder facilityNames = new StringBuilder();
+                        for(Facility facility : responsibleFacilities) {
+                            facilityNames.append(facility.getName()).append(", ");
+                        }
+                        throw new RuntimeException("Người dùng hiện đang quản lý các cơ sở: " + facilityNames.substring(0, facilityNames.length() - 2) + ". Vui lòng gỡ quyền quản lý cơ sở cho người dùng trước khi vô hiệu hóa tài khoản");
+                    }
+                }
                 // Log out if user is inactivated
                 user.setLoginPin(user.getLoginPin()+1);
             }
@@ -381,7 +446,7 @@ public class UserService implements UserDetailsService {
     }
 
     public List<UserOption> getAllManagersAsOptions() {
-        List<User> allManagers = userRepository.findAllByRole(1);
+        List<User> allManagers = userRepository.findAllByRoleAndIsActiveTrue(1);
         List<UserOption> managerOptions = new ArrayList<>();
         for (User user : allManagers) {
             UserOption userOption = new UserOption();
