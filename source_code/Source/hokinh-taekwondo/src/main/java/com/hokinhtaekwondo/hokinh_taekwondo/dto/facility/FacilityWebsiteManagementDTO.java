@@ -15,6 +15,7 @@ public class FacilityWebsiteManagementDTO {
     private String phoneNumber;
     private String description;
     private String mapsLink;
+    private String personInCharge;
     private String image;
 
     private List<FacilityClassUpdateDTO> classes;

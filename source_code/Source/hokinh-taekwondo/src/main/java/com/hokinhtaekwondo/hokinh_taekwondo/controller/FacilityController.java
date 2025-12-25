@@ -11,6 +11,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -36,13 +37,7 @@ public class FacilityController {
 
     @PostMapping("/admin/create")
     public ResponseEntity<?> create(@Validated @RequestBody FacilityRequestDTO requestDTO,
-                                    BindingResult bindingResult,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null || user.getRole()!=0) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ để tạo cơ sở mới.");
-//        }
+                                    BindingResult bindingResult) throws Exception {
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) {
             return errorResponse;
@@ -57,22 +52,7 @@ public class FacilityController {
     @PutMapping("/admin/update/{id}")
     public ResponseEntity<?> update(@PathVariable Integer id,
                                     @Validated @RequestBody FacilityUpdateDTO facilityUpdateDTO,
-                                    BindingResult bindingResult,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
-        User user = userService.getCurrentUser(session, token);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body("Hãy đăng nhập.");
-//        }
-//        if (user.getRole()>1) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body("Bạn không có quyền cập nhật cơ sở.");
-//        }
-//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), id)) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body("Bạn không quản lý cơ sở này.");
-//        }
+                                    BindingResult bindingResult) throws Exception {
 
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) {
@@ -136,49 +116,16 @@ public class FacilityController {
 
     @GetMapping("/homepage")
     public ResponseEntity<?> getFacilitiesHomepage() {
-        List<FacilityWebsiteManagementDTO> facilities = facilityService.getAllFacilitiesForWebsiteManagement();
-        List<FacilityHomepageDTO> displayedFacilities = new ArrayList<>();
-        for(FacilityWebsiteManagementDTO facility : facilities) {
-            HashMap<String, Schedule> schedules = new HashMap<>();
-            for(FacilityClassUpdateDTO facilityClass : facility.getClasses()) {
-                List<String> hours = new ArrayList<>();
-
-                if(schedules.get(facilityClass.getDaysOfWeek()) != null) {
-                    hours = schedules.get(facilityClass.getDaysOfWeek()).getShift();
-                    hours.add(facilityClass.getStartHour() + "-" + facilityClass.getEndHour());
-                    schedules.get(facilityClass.getDaysOfWeek()).setShift(hours);
-                }
-                else {
-                    hours.add(facilityClass.getStartHour() + "-" + facilityClass.getEndHour());
-                    schedules.put(facilityClass.getDaysOfWeek(), new Schedule(facilityClass.getDaysOfWeek(), hours));
-                }
-            }
-            displayedFacilities.add(new FacilityHomepageDTO(
-                    facility.getAddress(),
-                    new ArrayList<>(schedules.values()),
-                    facility.getMapsLink(),
-                    facility.getImage()
-            ));
-        }
-        return ResponseEntity.ok(displayedFacilities);
+        return ResponseEntity.ok(facilityService.getAllFacilitiesForHomepage());
     }
 
     @GetMapping("/admin/website-management")
-    public ResponseEntity<?> getAllFacilitiesForWebsiteManagement() {
-        return  ResponseEntity.ok(facilityService.getAllFacilitiesForWebsiteManagement());
+    public ResponseEntity<?> getAllFacilitiesForWebsiteManagement(@AuthenticationPrincipal User user) {
+        return  ResponseEntity.ok(facilityService.getAllFacilitiesForWebsiteManagement(user));
     }
 
     @GetMapping("/admin/management")
-    public ResponseEntity<?> getAllFacilitiesForManagement() {
-        return  ResponseEntity.ok(facilityService.getAllFacilitiesForManagement());
-    }
-    @GetMapping("/get-active")
-    public ResponseEntity<?> getActiveFacility() {
-        return ResponseEntity.ok(facilityService.getActiveFacilities());
-    }
-
-    @GetMapping("get-break-down")
-    public ResponseEntity<?> getBreakDownFacility() {
-        return ResponseEntity.ok(facilityService.getBreakDownFacilities());
+    public ResponseEntity<?> getAllFacilitiesForManagement(@AuthenticationPrincipal User user) {
+        return  ResponseEntity.ok(facilityService.getAllFacilitiesForManagement(user));
     }
 }

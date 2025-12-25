@@ -11,9 +11,11 @@ import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -94,49 +96,64 @@ public class FacilityService {
         facilityRepository.deleteById(id);
     }
 
-    // --- Get by ID ---
-    public FacilityResponseDTO getFacilityResponseDTOById(Integer id) {
-        Facility facility = facilityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Facility not found"));
-        return toResponseDTO(facility);
-    }
-
-
-    // --- Get by Id ---
-    public Facility getFacilityById(Integer id){
-        return facilityRepository.findById(id).orElse(null);
-    }
-
-    // --- Get all ---
-    public List<FacilityResponseDTO> getAllFacilities() {
-        return facilityRepository.findAll()
-                .stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    public List<FacilityWebsiteManagementDTO> getAllFacilitiesForWebsiteManagement() {
+    public List<FacilityWebsiteManagementDTO> getAllFacilitiesForWebsiteManagement(User user) {
+        if(user.getRole() != 0) {
+            throw new RuntimeException("Bạn không có quyền quản lý website");
+        }
         return facilityRepository.findAllByIsActiveEquals(true)
                 .stream()
                 .map(this::toFacilityWebsiteManagementDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<FacilityManagementDTO> getAllFacilitiesForManagement() {
-        return facilityRepository.findAll()
+    public List<FacilityHomepageDTO> getAllFacilitiesForHomepage() {
+        List<FacilityWebsiteManagementDTO> activeFacilities = facilityRepository.findAllByIsActiveEquals(true)
                 .stream()
-                .map(this::toFacilityManagementDTO)
-                .collect(Collectors.toList());
+                .map(this::toFacilityWebsiteManagementDTO)
+                .toList();
+        List<FacilityHomepageDTO> displayedFacilities = new ArrayList<>();
+        for(FacilityWebsiteManagementDTO facility : activeFacilities) {
+            HashMap<String, Schedule> schedules = new HashMap<>();
+            for(FacilityClassUpdateDTO facilityClass : facility.getClasses()) {
+                List<String> hours = new ArrayList<>();
+
+                if(schedules.get(facilityClass.getDaysOfWeek()) != null) {
+                    hours = schedules.get(facilityClass.getDaysOfWeek()).getShift();
+                    hours.add(facilityClass.getStartHour() + "-" + facilityClass.getEndHour());
+                    schedules.get(facilityClass.getDaysOfWeek()).setShift(hours);
+                }
+                else {
+                    hours.add(facilityClass.getStartHour() + "-" + facilityClass.getEndHour());
+                    schedules.put(facilityClass.getDaysOfWeek(), new Schedule(facilityClass.getDaysOfWeek(), hours));
+                }
+            }
+            displayedFacilities.add(new FacilityHomepageDTO(
+                    facility.getAddress(),
+                    new ArrayList<>(schedules.values()),
+                    facility.getPersonInCharge(),
+                    facility.getPhoneNumber(),
+                    facility.getMapsLink(),
+                    facility.getImage()
+            ));
+        }
+        return displayedFacilities;
     }
 
-    public List<Facility> getActiveFacilities() {
-        return facilityRepository.findAllByIsActive(true);
+    public List<FacilityManagementDTO> getAllFacilitiesForManagement(User user) {
+        if(user.getRole() == 1) {
+            return facilityRepository.findAllByManager_Id(user.getId())
+                    .stream()
+                    .map(this::toFacilityManagementDTO)
+                    .collect(Collectors.toList());
+        }
+        else if(user.getRole() == 0) {
+            return facilityRepository.findAll()
+                    .stream()
+                    .map(this::toFacilityManagementDTO)
+                    .collect(Collectors.toList());
+        }
+        return null;
     }
-
-    public List<Facility> getBreakDownFacilities() {
-        return facilityRepository.findAllByIsActive(false);
-    }
-
 
     // --- Mapper ---
     private FacilityResponseDTO toResponseDTO(Facility facility) {
@@ -162,6 +179,7 @@ public class FacilityService {
         dto.setId(facility.getId());
         dto.setName(facility.getName());
         dto.setAddress(facility.getAddress());
+        dto.setPersonInCharge(facility.getManager() != null ? facility.getManager().getName() : "");
         dto.setPhoneNumber(facility.getPhoneNumber());
         List<FacilityClassUpdateDTO> classes = new ArrayList<>();
         for(FacilityClass facilityClass : facility.getFacilityClasses()) {

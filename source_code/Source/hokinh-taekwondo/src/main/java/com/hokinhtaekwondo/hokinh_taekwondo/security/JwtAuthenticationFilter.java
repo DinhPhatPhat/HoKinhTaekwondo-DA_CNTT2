@@ -62,12 +62,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         catch (BadCredentialsException e) {
             // Handle wrong username/password
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"error\":\"Tên đăng nhập hoặc mật khẩu không đúng\"}");
         }
         catch (AuthenticationException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
             response.getWriter().write("\"error\":\"" + e.getMessage() + "\"}");
         }
