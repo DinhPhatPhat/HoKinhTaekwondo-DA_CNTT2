@@ -205,7 +205,7 @@ VALUES
     ('u002', 'Tran Thi B', '0987654321', '1995-07-20', 'instructorB@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 3, 'black/1', TRUE, 2, 0),
     ('u003', 'Le Van C', '0978123456', '2000-01-05', 'studentC@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'red', TRUE, 2, 0),
     ('u004', 'Pham Thi D', '0909090909', '2003-11-10', 'studentD@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 1, 'blue', TRUE, null, 0),
-    ('u005', 'Do Van E', '0923456789', '1998-09-25', 'managerE@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 0, '', TRUE, null, 0),
+    ('u005', 'Do Van E', '0923456789', '1998-09-25', 'tuanhoang03062004@gmail.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 0, '', TRUE, null, 0),
     ('u006', 'Hoang Van F', '0934567890', '2005-06-18', 'studentF@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
     ('u007', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 3, 0),
 ('b0077', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 3, 0),

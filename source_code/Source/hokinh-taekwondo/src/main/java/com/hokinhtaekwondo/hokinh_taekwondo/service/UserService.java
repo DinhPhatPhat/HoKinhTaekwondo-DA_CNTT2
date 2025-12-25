@@ -864,6 +864,7 @@ public class UserService implements UserDetailsService {
     }
 
 
+
     private UserWithFacilityClass toUserWithFacilityClass(User user) {
         UserWithFacilityClass userWithFacilityClass = new UserWithFacilityClass();
         userWithFacilityClass.setId(user.getId());

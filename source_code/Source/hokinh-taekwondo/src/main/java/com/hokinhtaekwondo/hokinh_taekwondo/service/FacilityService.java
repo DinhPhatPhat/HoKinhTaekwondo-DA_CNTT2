@@ -11,7 +11,6 @@ import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

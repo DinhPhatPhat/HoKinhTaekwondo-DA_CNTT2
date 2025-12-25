@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, String> {
     List<User> findByFacility(Facility facility);
 
+    Optional<User> findByEmail(String email);
+
     @Query("SELECT u.id FROM User u WHERE u.id IN :ids")
     List<String> findExistingIds(@Param("ids") List<String> ids);
 
