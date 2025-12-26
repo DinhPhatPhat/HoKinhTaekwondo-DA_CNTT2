@@ -59,8 +59,9 @@ public class OtpService {
 
     // Verify OTP
     public boolean verifyOtp(String email, String otp) {
+
         Optional<OtpVerification> otpVerificationOpt =
-                otpRepository.findByEmailAndOtpAndVerifiedFalse(email, otp);
+                otpRepository.findByEmailAndVerifiedFalse(email);
 
         if (otpVerificationOpt.isEmpty()) {
             return false;
@@ -68,8 +69,13 @@ public class OtpService {
 
         OtpVerification otpVerification = otpVerificationOpt.get();
 
-        // Check if OTP is expired
+        // Check expiry
         if (LocalDateTime.now().isAfter(otpVerification.getExpiryTime())) {
+            return false;
+        }
+
+        // Check OTP using matches()
+        if (!passwordEncoder.matches(otp, otpVerification.getOtp())) {
             return false;
         }
 
@@ -80,19 +86,20 @@ public class OtpService {
         return true;
     }
 
+
     // Reset password
     public void resetPassword(String email, String newPassword) {
 
         OtpVerification otpVerification = otpRepository
                 .findByEmailAndVerifiedTrue(email)
-                .orElseThrow(() -> new RuntimeException("OTP not verified"));
+                .orElseThrow(() -> new RuntimeException("Không xác thực được OTP"));
 
         if (LocalDateTime.now().isAfter(otpVerification.getExpiryTime())) {
-            throw new RuntimeException("OTP expired");
+            throw new RuntimeException("OTP đã hết hạn");
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
