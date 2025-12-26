@@ -47,7 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             User user = userDetailsService.getById(userDetails.getUsername());
             LoginResponseDTO loginResponse = new LoginResponseDTO();
             loginResponse.setToken(token);
-            loginResponse.setUserInfo(new UserLoginResponse(user.getName(), user.getRole()));
+            Boolean isFirstChangePassword = user.getLoginPin() == 0;
+            loginResponse.setUserInfo(new UserLoginResponse(user.getName(), user.getRole(), isFirstChangePassword));
             System.out.println(loginResponse.getUserInfo().getName());
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json;charset=UTF-8");

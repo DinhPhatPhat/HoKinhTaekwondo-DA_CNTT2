@@ -12,4 +12,5 @@ import lombok.Setter;
 public class UserLoginResponse {
     private String name;
     private Integer role;
+    private Boolean isFirstChangePassword;
 }

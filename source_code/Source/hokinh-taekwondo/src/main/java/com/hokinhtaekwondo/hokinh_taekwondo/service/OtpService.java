@@ -37,7 +37,7 @@ public class OtpService {
         // Check if user exists
         System.out.println(email);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with this email"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email này"));
 
         // Delete any existing OTP for this email
         otpRepository.deleteByEmail(email);
@@ -106,7 +106,6 @@ public class OtpService {
 
         otpRepository.deleteByEmail(email);
     }
-
 
     private String generateOtp() {
         SecureRandom random = new SecureRandom();
