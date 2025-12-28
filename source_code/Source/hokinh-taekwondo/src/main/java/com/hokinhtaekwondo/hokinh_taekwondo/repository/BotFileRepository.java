@@ -8,4 +8,7 @@ import java.util.Optional;
 
 public interface BotFileRepository extends JpaRepository<BotFile, String> {
     Optional<BotFile> findBotFileByPythonFileId(String pythonFileId);
+    List<BotFile> findBotFilesByStatus(String status);
+    List<BotFile> findBotFilesByPythonFileIdIn(List<String> pythonFileIds);
+    void deleteAllByPythonFileIdNotInOrPythonFileIdNull(List<String> pythonFileIds);
 }

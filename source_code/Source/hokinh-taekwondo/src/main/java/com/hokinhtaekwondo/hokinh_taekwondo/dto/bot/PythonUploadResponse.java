@@ -9,4 +9,5 @@ public class PythonUploadResponse {
     @JsonProperty("file_id")
     private String fileId;
     private String message;
+    private String status;
 }

@@ -5,6 +5,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.dto.bot.PythonFileResponse;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.bot.PythonUploadResponse;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.BotFile;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.BotFileRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -46,29 +46,58 @@ public class BotTrainingFileService {
             );
 
             List<PythonFileResponse> pythonFiles = response.getBody();
-            if (pythonFiles != null) {
-                for (PythonFileResponse pythonFile : pythonFiles) {
-                    System.out.println(pythonFile.getName());
-                    BotFile file = fileDatabase.findBotFileByPythonFileId(pythonFile.getId()).orElse(null);
-                    if(file == null) {
-                        file = new BotFile();
-                        file.setName(pythonFile.getName());
-                        file.setSize(pythonFile.getSize());
-                        file.setUploadDate(pythonFile.getUploadDate());
-                        file.setType(pythonFile.getType());
-                        file.setStatus(pythonFile.getStatus());
-                        file.setPythonFileId(pythonFile.getId());
+            if(pythonFiles == null || pythonFiles.isEmpty()) {
+                return fileDatabase.findAll()
+                        .stream()
+                        .map(this::toFileDTO).toList();
+            }
 
-                        fileDatabase.save(file);
-                    }
+            HashMap<String, PythonFileResponse> pythonFilesById = toHashMapVectorFile(pythonFiles);
+            List<String> pythonFileIds = pythonFilesById.keySet().stream().toList();
+            List<BotFile> existedFiles = fileDatabase.findBotFilesByPythonFileIdIn(pythonFileIds);
+            HashMap<String, BotFile> botFilesById = toHashMapBotFile(existedFiles);
+
+            for (BotFile file : existedFiles) {
+                if (file.getStatus().equals("STATE_PENDING")) {
+                    file.setStatus(pythonFilesById.get(file.getPythonFileId()).getStatus());
                 }
             }
+            fileDatabase.deleteAllByPythonFileIdNotInOrPythonFileIdNull(pythonFileIds);
+            for(PythonFileResponse pythonFile : pythonFiles) {
+                if(botFilesById.get(pythonFile.getId()) == null) {
+                    BotFile botFile = new BotFile();
+                    botFile.setPythonFileId(pythonFile.getId());
+                    botFile.setStatus(pythonFile.getStatus());
+                    botFile.setType(pythonFile.getType());
+                    botFile.setSize(pythonFile.getSize());
+                    botFile.setName(pythonFile.getName());
+                    botFile.setUploadDate(VietNamTime.fromUtcIsoToVietnam(pythonFile.getUploadDate()));
+                    fileDatabase.save(botFile);
+                }
+            }
+
             System.out.println("pt: " + pythonFiles);
         } catch (Exception e) {
             System.err.println("Error syncing: " + e.getMessage());
         }
 
         return fileDatabase.findAll().stream().map(this::toFileDTO).toList();
+    }
+
+    private HashMap<String, PythonFileResponse> toHashMapVectorFile(List<PythonFileResponse> files) {
+        HashMap<String, PythonFileResponse> result = new HashMap<>();
+        for (PythonFileResponse file : files) {
+            result.put(file.getId(), file);
+        }
+        return result;
+    }
+
+    private HashMap<String, BotFile> toHashMapBotFile(List<BotFile> files) {
+        HashMap<String, BotFile> result = new HashMap<>();
+        for (BotFile file : files) {
+            result.put(file.getPythonFileId(), file);
+        }
+        return result;
     }
 
     private FileDTO toFileDTO(BotFile file) {
@@ -109,15 +138,14 @@ public class BotTrainingFileService {
 
             PythonUploadResponse uploadResponse = response.getBody();
             if (uploadResponse == null || !uploadResponse.isSuccess()) {
-                throw new RuntimeException("Failed to upload file to Python backend");
+                throw new RuntimeException("Đã xảy ra lỗi khi upload file. Vui lòng thử lại");
             }
-
             // Create FileDTO
             BotFile createdFile = new BotFile();
             createdFile.setName(file.getOriginalFilename());
             createdFile.setSize(formatFileSize(file.getSize()));
-            createdFile.setUploadDate(LocalDateTime.now().toString().split("T")[0]);
-            createdFile.setStatus("processing");
+            createdFile.setUploadDate(VietNamTime.nowDateTime().toString());
+            createdFile.setStatus(uploadResponse.getStatus());
             createdFile.setType(getFileExtension(Objects.requireNonNull(file.getOriginalFilename())));
             createdFile.setPythonFileId(uploadResponse.getFileId());  // Type-safe access!
 
@@ -150,28 +178,6 @@ public class BotTrainingFileService {
             }
             fileDatabase.deleteById(fileId);
         }
-    }
-
-    public FileDTO reindexFile(String fileId) {
-        BotFile file = fileDatabase.findById(fileId).orElse(null);
-        if (file != null) {
-            // Trigger reindexing in Python backend
-            try {
-                restTemplate.postForEntity(
-                        pythonAiUrl + "/vector-store/files/" + file.getPythonFileId() + "/reindex",
-                        null,
-                        Map.class
-                );
-
-                file.setStatus("processing");
-            } catch (Exception e) {
-                file.setStatus("error");
-            }
-        }
-        else {
-            return null;
-        }
-        return toFileDTO(file);
     }
 
     private File convertMultipartFileToFile(MultipartFile multipartFile) throws IOException {

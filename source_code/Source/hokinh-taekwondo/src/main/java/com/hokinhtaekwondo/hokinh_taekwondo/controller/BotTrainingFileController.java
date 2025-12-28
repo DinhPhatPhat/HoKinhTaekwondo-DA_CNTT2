@@ -47,11 +47,4 @@ public class BotTrainingFileController {
         botTrainingFileService.deleteFile(fileId);
         return ResponseEntity.noContent().build();
     }
-
-    // Reindex file
-    @PostMapping("/{fileId}/reindex")
-    public ResponseEntity<FileDTO> reindexFile(@PathVariable String fileId) {
-        FileDTO reindexedFile = botTrainingFileService.reindexFile(fileId);
-        return ResponseEntity.ok(reindexedFile);
-    }
 }
