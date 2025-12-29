@@ -275,7 +275,7 @@ public class UserController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=users-import-errors.xlsx")
+                            "attachment; filename=DS_nguoi_dung_import_loi.xlsx")
                     // Add custom headers with statistics
                     .header("X-Total-Rows", String.valueOf(result.getTotalRows()))
                     .header("X-Success-Count", String.valueOf(result.getSuccessCount()))

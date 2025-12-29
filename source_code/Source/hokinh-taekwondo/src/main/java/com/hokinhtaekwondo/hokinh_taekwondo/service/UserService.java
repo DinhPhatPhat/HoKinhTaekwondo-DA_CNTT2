@@ -13,6 +13,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.InstructorCodeGenerator;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
@@ -572,6 +573,16 @@ public class UserService implements UserDetailsService {
         for (UserCreateForClassDTO dto : userList) {
             User user = new User();
             user.setId(dto.getId());
+            if(dto.getRole() != 4 && dto.getId().isEmpty()) {
+                String expectedId = InstructorCodeGenerator.generateInstructorCode(dto.getName(), dto.getDateOfBirth(), dto.getRole() == 2);
+                Long sameIdCount = userRepository.countByUserId(expectedId);
+                if(sameIdCount > 0) {
+                    user.setId(expectedId+ "(" + sameIdCount + ")");
+                }
+                else {
+                    user.setId(expectedId);
+                }
+            }
             user.setName(dto.getName());
             user.setPhoneNumber(dto.getPhoneNumber());
             user.setDateOfBirth(dto.getDateOfBirth());
@@ -592,7 +603,7 @@ public class UserService implements UserDetailsService {
                                 new IllegalArgumentException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
                 user.setFacility(facility);
             } else {
-                throw new IllegalArgumentException("Mỗi người dùng phải có FacilityId hợp lệ.");
+                throw new IllegalArgumentException("Mỗi người dùng phải có cơ sở hợp lệ.");
             }
 
             UserInClassDTO userInClass = new UserInClassDTO();
@@ -738,7 +749,6 @@ public class UserService implements UserDetailsService {
                 if (row == null) continue;
 
                 String userId = get(row, COL_MA_VO_SINH);
-                System.out.println(i + userId);
                 String fullName = get(row, COL_HO_TEN);
                 LocalDate dateOfBirth = getDate(row, COL_NGAY_SINH);
                 String beltLevel = get(row, COL_CAP_DAI);
@@ -746,7 +756,7 @@ public class UserService implements UserDetailsService {
                 String phoneNumber = get(row, COL_SDT);
 
                 try {
-                    validate(userId, fullName, dateOfBirth, beltLevel, phoneNumber);
+                    validate(userId, fullName, dateOfBirth, beltLevel, phoneNumber, roleType == 4);
 
                     if(userRepository.existsById(userId)) {
                         throw new IllegalArgumentException("Mã người dùng đã tồn tại trên hệ");
@@ -754,17 +764,28 @@ public class UserService implements UserDetailsService {
                     // create new user
                     User user = new User();
                     user.setId(userId);
+                    if(roleType != 4 && userId.isEmpty()) {
+                        String expectedId = InstructorCodeGenerator.generateInstructorCode(fullName, dateOfBirth, roleType == 2);
+                        Long sameIdCount = userRepository.countByUserId(expectedId);
+                        if(sameIdCount > 0) {
+                            user.setId(expectedId+ "(" + sameIdCount + ")");
+                        }
+                        else {
+                            user.setId(expectedId);
+                        }
+                    }
                     user.setName(fullName);
                     user.setPhoneNumber(phoneNumber);
                     user.setDateOfBirth(dateOfBirth);
                     user.setBeltLevel(beltLevel);
                     user.setAddress(address);
                     user.setRole(roleType);
+                    user.setFacility(facilityClass.getFacility());
                     user.setPassword(passwordEncoder.encode(userId+ "12345678@"));
-                    userRepository.save(user);
+                    User createdUser = userRepository.save(user);
                     // add to class
                     FacilityClassUser facilityClassUser = new FacilityClassUser();
-                    facilityClassUser.setUserId(userId);
+                    facilityClassUser.setUserId(createdUser.getId());
                     facilityClassUser.setFacilityClass(facilityClass);
                     facilityClassUser.setRoleInClass(type);
                     facilityClassUser.setIsActive(true);
@@ -820,10 +841,11 @@ public class UserService implements UserDetailsService {
             String fullName,
             LocalDate dateOfBirth,
             String beltLevel,
-            String phoneNumber
+            String phoneNumber,
+            Boolean isStudent
     ) {
-        if (userId == null || userId.isEmpty()) {
-            throw new IllegalArgumentException("Mã võ sinh không được để trống");
+        if (isStudent && (userId == null || userId.isEmpty())) {
+            throw new IllegalArgumentException("Mã người dùng không được để trống");
         }
         if (fullName == null || fullName.isEmpty()) {
             throw new IllegalArgumentException("Họ và tên không được để trống");

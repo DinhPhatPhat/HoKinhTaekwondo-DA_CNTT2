@@ -103,9 +103,15 @@ public class ArticleService {
 
 
     // ----------- GET ARTICLES FOR HOMEPAGE -----------
-    public Page<ArticleDTO> getArticlesHomepage(int page, int size) {
+    public Page<ArticleDTO> getArticlesHomepage(int page, int size, String type) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "date"));
-        Page<Article> articlePage = articleRepository.findAll(pageable);
+        Page<Article> articlePage;
+        if(type.equals("event")) {
+            articlePage = articleRepository.findAllActiveEvents(pageable);
+        }
+        else {
+            articlePage = articleRepository.findAllActiveArticles(pageable);
+        }
         return articlePage.map(this::convertToDTO);
     }
 

@@ -21,9 +21,10 @@ public class ArticleController {
     @GetMapping("/homepage")
     public ResponseEntity<?> getArticleHomepage(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "1") int size
+            @RequestParam(defaultValue = "1") int size,
+            @RequestParam(defaultValue = "event") String type
     ) {
-        return ResponseEntity.ok(articleService.getArticlesHomepage(page, size));
+        return ResponseEntity.ok(articleService.getArticlesHomepage(page, size, type));
     }
 
     @GetMapping("/admin/all-articles-by-category")

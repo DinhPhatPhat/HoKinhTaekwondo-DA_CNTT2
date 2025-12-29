@@ -14,6 +14,7 @@ import java.util.List;
 public class FacilityHomepageDTO {
     private String address;
     private List<Schedule> schedule;
+    private String name;
     private String personInCharge;
     private String phoneNumber;
     private String mapsLink;

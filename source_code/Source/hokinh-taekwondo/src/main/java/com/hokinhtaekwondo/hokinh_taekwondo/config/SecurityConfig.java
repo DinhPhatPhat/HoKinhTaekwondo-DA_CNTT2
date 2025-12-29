@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/forgot-password/**").permitAll()
                         .requestMatchers("/api/auth/logout-all").permitAll()
+                        .requestMatchers("/api/registration/**").permitAll()
                         .requestMatchers("/api/*/homepage").permitAll()
                         .requestMatchers("/api/bot-files/**").hasRole("CLUB_HEAD")
                         .requestMatchers("/api/*/admin/**").hasAnyRole("CLUB_HEAD", "MANAGER")

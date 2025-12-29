@@ -38,35 +38,18 @@ public class EmailService {
         return "<html>" +
                 "<body style='font-family: Arial, sans-serif;'>" +
                 "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
-                "<h2 style='color: #333;'>Password Reset Request</h2>" +
-                "<p>You have requested to reset your password.</p>" +
+                "<h2 style='color: #333;'>Yêu Cầu Đặt Lại Mật Khẩu</h2>" +
+                "<p>Bạn đã yêu cầu đặt lại mật khẩu của mình.</p>" +
                 "<div style='background-color: #f4f4f4; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;'>" +
-                "<p style='margin: 0; font-size: 14px; color: #666;'>Your OTP code is:</p>" +
+                "<p style='margin: 0; font-size: 14px; color: #666;'>Mã OTP của bạn là:</p>" +
                 "<h1 style='margin: 10px 0; color: #667eea; letter-spacing: 5px;'>" + otp + "</h1>" +
                 "</div>" +
-                "<p style='color: #666;'>This OTP will expire in <strong>10 minutes</strong>.</p>" +
-                "<p style='color: #666;'>If you didn't request this password reset, please ignore this email.</p>" +
+                "<p style='color: #666;'>Mã OTP này sẽ hết hạn trong <strong>10 phút</strong>.</p>" +
+                "<p style='color: #666;'>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>" +
                 "<hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>" +
-                "<p style='font-size: 12px; color: #999;'>This is an automated message, please do not reply.</p>" +
+                "<p style='font-size: 12px; color: #999;'>Đây là email tự động, vui lòng không trả lời.</p>" +
                 "</div>" +
                 "</body>" +
                 "</html>";
     }
 }
-
-// application.properties configuration
-/*
-# Email Configuration (Gmail)
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-spring.mail.properties.mail.smtp.connectiontimeout=5000
-spring.mail.properties.mail.smtp.timeout=5000
-spring.mail.properties.mail.smtp.writetimeout=5000
-
-# Application name (optional)
-spring.application.name=YourAppName
-*/

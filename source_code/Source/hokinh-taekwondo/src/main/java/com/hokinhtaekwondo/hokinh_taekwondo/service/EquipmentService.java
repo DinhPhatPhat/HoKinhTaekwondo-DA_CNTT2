@@ -5,14 +5,17 @@ import com.hokinhtaekwondo.hokinh_taekwondo.dto.equipment.EquipmentDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.dto.equipment.EquipmentUpdateDTO;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Equipment;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
+import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.EquipmentRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,7 +28,12 @@ public class EquipmentService {
     // **AUTHENTICATION
     // --- Create ---
     @Transactional
-    public EquipmentDTO createEquipment(EquipmentCreateDTO dto) {
+    public EquipmentDTO createEquipment(EquipmentCreateDTO dto, User creator) {
+        Facility facility = facilityRepository.findById(dto.getFacilityId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
+        if(!ValidateRole.isResponsibleForFacility(creator, facility.getManager())) {
+            throw new RuntimeException("Bạn không có quyền thêm thiết bị cho cơ sở này");
+        }
         Equipment equipment = new Equipment();
         equipment.setName(dto.getName());
         equipment.setUnit(dto.getUnit());
@@ -37,8 +45,6 @@ public class EquipmentService {
         equipment.setFixableQuantity(dto.getFixableQuantity());
         equipment.setGoodQuantity(dto.getGoodQuantity());
 
-        Facility facility = facilityRepository.findById(dto.getFacilityId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy cơ sở có ID = " + dto.getFacilityId()));
         equipment.setFacility(facility);
         equipment.setCreatedAt(VietNamTime.nowDateTime());
         equipment.setUpdatedAt(VietNamTime.nowDateTime());
@@ -48,7 +54,20 @@ public class EquipmentService {
 
     // **AUTHENTICATION
     @Transactional
-    public void updateEquipments(List<EquipmentUpdateDTO> equipments) {
+    public void updateEquipments(List<EquipmentUpdateDTO> equipments, User creator) {
+        if(creator.getRole() == 1) {
+            List<Integer> equipmentIds = new ArrayList<>();
+            for(EquipmentUpdateDTO dto : equipments) {
+                equipmentIds.add(dto.getId());
+            }
+            List<String> managersOfEquipment = equipmentRepository.findManagersOfEquipments(equipmentIds);
+            for(String manager : managersOfEquipment) {
+
+                if(!manager.equals(creator.getId())) {
+                    throw new RuntimeException("Danh sách thiết bị chứa thiết bị không thuộc quyền quản lý của bạn");
+                }
+            }
+        }
         for (EquipmentUpdateDTO equipmentDTO : equipments) {
             updateEquipment(equipmentDTO);
         }
@@ -89,22 +108,29 @@ public class EquipmentService {
 
     // **AUTHENTICATION
     // --- Delete ---
-    public void deleteEquipment(Integer id) {
+    public void deleteEquipment(Integer id, User deleteAuthor) {
         Equipment equipment = equipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thiết bị có ID = " + id));
+        Facility facility = equipment.getFacility();
+        if(!ValidateRole.isResponsibleForFacility(deleteAuthor, facility.getManager())) {
+            throw new RuntimeException("Bạn không có quyền xóa thiết bị ở cơ sở này");
+        }
 
         equipmentRepository.delete(equipment);
     }
 
     // --- Find All ---
-    public List<EquipmentDTO> getAllEquipments() {
+    public List<EquipmentDTO> getAllEquipments(User user) {
+        if(user.getRole() == 1) {
+            return getEquipmentsByManagerId(user.getId());
+        }
         return equipmentRepository.findAll()
                 .stream()
                 .map(this::toDTO)
                 .toList();
     }
 
-    public List<EquipmentDTO> getEquipmentsByManagerId(String managerId) {
+    private List<EquipmentDTO> getEquipmentsByManagerId(String managerId) {
         return equipmentRepository.findAllByFacility_Manager_Id(managerId)
                 .stream()
                 .map(this::toDTO)

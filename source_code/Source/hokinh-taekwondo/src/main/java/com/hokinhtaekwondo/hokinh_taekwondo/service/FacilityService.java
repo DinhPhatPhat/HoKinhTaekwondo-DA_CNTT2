@@ -9,6 +9,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
 import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.time.VietNamTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,10 @@ public class FacilityService {
     private final UserRepository userRepository;
 
     // --- Create ---
-    public FacilityManagementDTO createFacility(FacilityRequestDTO dto) {
+    public FacilityManagementDTO createFacility(FacilityRequestDTO dto, User creator) {
+        if(creator.getRole() != 0) {
+            throw new RuntimeException("Bạn không có quyền tạo cơ sở");
+        }
         Facility facility = new Facility();
         facility.setName(dto.getName());
         facility.setAddress(dto.getAddress());
@@ -52,9 +56,12 @@ public class FacilityService {
     }
 
     // --- Update ---
-    public void updateFacility(Integer id, FacilityUpdateDTO dto) {
+    public void updateFacility(Integer id, FacilityUpdateDTO dto, User updateAuthor) {
         Facility facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Facility not found"));
+        if(!ValidateRole.isResponsibleForFacility(updateAuthor, facility.getManager())) {
+            throw new RuntimeException("Bạn không có quyền chỉnh sửa thông tin cơ sở");
+        }
         // Update only non-null fields
         if (dto.getName() != null) facility.setName(dto.getName());
         if (dto.getAddress() != null) facility.setAddress(dto.getAddress());
@@ -129,6 +136,7 @@ public class FacilityService {
             displayedFacilities.add(new FacilityHomepageDTO(
                     facility.getAddress(),
                     new ArrayList<>(schedules.values()),
+                    facility.getName(),
                     facility.getPersonInCharge(),
                     facility.getPhoneNumber(),
                     facility.getMapsLink(),

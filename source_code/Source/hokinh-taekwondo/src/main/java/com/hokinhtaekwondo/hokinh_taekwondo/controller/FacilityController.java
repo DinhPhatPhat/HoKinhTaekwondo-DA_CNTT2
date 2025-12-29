@@ -36,21 +36,23 @@ public class FacilityController {
     private UserService userService;
 
     @PostMapping("/admin/create")
-    public ResponseEntity<?> create(@Validated @RequestBody FacilityRequestDTO requestDTO,
+    public ResponseEntity<?> create(@AuthenticationPrincipal User creator,
+                                    @Validated @RequestBody FacilityRequestDTO requestDTO,
                                     BindingResult bindingResult) throws Exception {
         ResponseEntity<?> errorResponse = checkBindingResult(bindingResult);
         if (errorResponse != null) {
             return errorResponse;
         }
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(facilityService.createFacility(requestDTO));
+            return ResponseEntity.status(HttpStatus.CREATED).body(facilityService.createFacility(requestDTO, creator));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi tạo cơ sở: " + e.getMessage());
         }
     }
     @PutMapping("/admin/update/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id,
+    public ResponseEntity<?> update(@AuthenticationPrincipal User updateAuthor,
+                                    @PathVariable Integer id,
                                     @Validated @RequestBody FacilityUpdateDTO facilityUpdateDTO,
                                     BindingResult bindingResult) throws Exception {
 
@@ -60,7 +62,7 @@ public class FacilityController {
         }
 
         try {
-            facilityService.updateFacility(id, facilityUpdateDTO);
+            facilityService.updateFacility(id, facilityUpdateDTO, updateAuthor);
             return ResponseEntity.ok(facilityUpdateDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -71,28 +73,28 @@ public class FacilityController {
         }
     }
 
-    @DeleteMapping("/admin/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Integer id,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
-        User user = userService.getCurrentUser(session, token);
-        if (user == null ||
-                (user.getRole() != 0)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ");
-        }
-
-        try {
-            facilityService.deleteFacility(id);
-            return ResponseEntity.ok("Đã xóa cơ sở có ID = " + id);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Không tìm thấy cơ sở có id = " + id);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Lỗi hệ thống khi xóa cơ sở: " + e.getMessage());
-        }
-    }
+//    @DeleteMapping("/admin/delete/{id}")
+//    public ResponseEntity<?> delete(@PathVariable Integer id,
+//                                    HttpSession session,
+//                                    @CookieValue(value = "token", required = false) String token) throws Exception {
+//        User user = userService.getCurrentUser(session, token);
+//        if (user == null ||
+//                (user.getRole() != 0)) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body("Hãy đăng nhập với tư cách chủ nhiệm câu lạc bộ");
+//        }
+//
+//        try {
+//            facilityService.deleteFacility(id);
+//            return ResponseEntity.ok("Đã xóa cơ sở có ID = " + id);
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body("Không tìm thấy cơ sở có id = " + id);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Lỗi hệ thống khi xóa cơ sở: " + e.getMessage());
+//        }
+//    }
 
 
     private ResponseEntity<?> checkBindingResult(BindingResult bindingResult) {

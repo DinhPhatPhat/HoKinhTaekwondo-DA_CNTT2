@@ -1,7 +1,7 @@
 INSERT INTO facilities (name, address, phone_number, description, maps_link, image, is_active)
 VALUES
     ('Trung tâm cung ứng dịch vụ Văn Hóa - Thể Thao Phường Xuân Hoà', 'Số 185 Cách Mạng Tháng Tám, Quận 3', '0909123456', NULL, '', '/branch2.webp', true),
-    ('Nhà văn hóa Phường 15, Quận 10', 'Số 123 Đường ABC, Quận 10', '0909876543', NULL, '', '/branch.webp', true),
+    ('Nhà văn hóa Phường 15, Quận 10', 'Số 123 Đường ABC, Quận 10', '0909876543', NULL, 'haha', '/branch.webp', true),
     ('Trung tâm thể thao Phường Tân Định, Quận 1', 'Số 456 Lê Thánh Tôn, Quận 1', '0912345678', NULL, '', '/branch2.webp', true),
     ('Nhà văn hóa Phường 12, Quận Tân Bình', 'Số 789 Trường Chinh, Quận Tân Bình', '0933445566', NULL, '', '/branch.webp', true),
     ('Trung tâm TDTT Phường 7, Quận 5', 'Số 321 Nguyễn Trãi, Quận 5', '0988999000', NULL, '', '/branch2.webp', true);

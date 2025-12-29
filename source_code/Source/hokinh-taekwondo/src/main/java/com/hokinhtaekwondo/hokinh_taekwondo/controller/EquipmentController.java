@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,29 +31,17 @@ public class EquipmentController {
     private ValidateService validateService;
 
     @PostMapping("/admin/create")
-    public ResponseEntity<?> create(@Valid @RequestBody EquipmentCreateDTO dto,
-                                    BindingResult bindingResult,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
-//        User user = userService.getCurrentUser(session, token);
-//        if (user == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Hãy đăng nhập trước khi thực hiện.");
-//        }
-//        if (user.getRole() > 1) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền tạo thiết bị.");
-//        }
-//
-//        // Nếu là quản lý, phải là quản lý của cơ sở đó
-//        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), dto.getFacilityId())) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không quản lý cơ sở này.");
-//        }
+    public ResponseEntity<?> create(@AuthenticationPrincipal User user,
+                                    @Valid @RequestBody EquipmentCreateDTO dto,
+                                    BindingResult bindingResult) throws Exception {
+
 
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
 
         try {
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(equipmentService.createEquipment(dto));
+                    .body(equipmentService.createEquipment(dto, user));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi hệ thống khi tạo thiết bị: " + e.getMessage());
@@ -60,17 +49,15 @@ public class EquipmentController {
     }
 
     @PutMapping("/admin/update-equipments")
-    public ResponseEntity<?> updateEquipments(
+    public ResponseEntity<?> updateEquipments(@AuthenticationPrincipal User user,
                                     @Valid @RequestBody List<EquipmentUpdateDTO> equipments,
-                                    BindingResult bindingResult,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
+                                    BindingResult bindingResult) throws Exception {
 
         ResponseEntity<?> errorResponse = validateService.checkBindingResult(bindingResult);
         if (errorResponse != null) return errorResponse;
 
         try {
-            equipmentService.updateEquipments(equipments);
+            equipmentService.updateEquipments(equipments, user);
             return ResponseEntity.ok("Đã cập nhật" + equipments.size() + "thiết bị");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -79,29 +66,11 @@ public class EquipmentController {
     }
 
     @DeleteMapping("/admin/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Integer id,
-                                    HttpSession session,
-                                    @CookieValue(value = "token", required = false) String token) throws Exception {
-        User user = userService.getCurrentUser(session, token);
-        if (user == null || user.getRole() > 1) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Bạn không có quyền xóa thiết bị.");
-        }
-
-        Equipment equipment = equipmentService.getById(id);
-        if (equipment == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Không tìm thấy thiết bị có id = " + id);
-        }
-
-        // Nếu là quản lý, phải kiểm tra xem thiết bị đó có thuộc cơ sở của mình hay không
-        if (user.getRole() == 1 && !userService.isManagerOfFacility(user.getId(), equipment.getFacility().getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Bạn không quản lý cơ sở chứa thiết bị này.");
-        }
+    public ResponseEntity<?> delete(@AuthenticationPrincipal User deleteAuthor,
+                                    @PathVariable Integer id) throws Exception {
 
         try {
-            equipmentService.deleteEquipment(id);
+            equipmentService.deleteEquipment(id, deleteAuthor);
             return ResponseEntity.ok("Đã xóa thiết bị có ID = " + id);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -110,8 +79,8 @@ public class EquipmentController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<?> getEquipments(HttpSession session,@CookieValue(value = "token", required = false) String token) throws Exception{
-        List<EquipmentDTO> equipments = equipmentService.getAllEquipments();
+    public ResponseEntity<?> getEquipments(@AuthenticationPrincipal User user) throws Exception{
+        List<EquipmentDTO> equipments = equipmentService.getAllEquipments(user);
         return ResponseEntity.ok(equipments);
     }
 }

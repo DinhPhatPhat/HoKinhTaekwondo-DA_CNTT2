@@ -21,7 +21,13 @@ public interface UserRepository extends JpaRepository<User, String> {
     List<String> findExistingIds(@Param("ids") List<String> ids);
 
     List<User> findAllByRoleAndIsActiveTrue(Integer role);
-    Long countById(String id);
+
+    @Query("""
+    SELECT count(u.id)
+    FROM User u
+    WHERE u.id LIKE CONCAT(:id, '%')
+        """)
+    Long countByUserId(String id);
 
     @Query("""
     SELECT u FROM User u

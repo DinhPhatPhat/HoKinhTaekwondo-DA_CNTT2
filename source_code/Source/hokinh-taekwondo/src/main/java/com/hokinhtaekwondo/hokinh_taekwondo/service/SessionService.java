@@ -110,37 +110,6 @@ public class SessionService {
         return createdCount;
     }
 
-
-    // ================= BULK UPDATE ==================
-    @Transactional
-    public void bulkUpdateSessions(SessionBulkUpdateDTO sessionBulkUpdateDTO) {
-        if (sessionBulkUpdateDTO.getFacilityClassId() == null || facilityClassRepository.findById(sessionBulkUpdateDTO.getFacilityClassId()).isEmpty()) {
-            throw new IllegalArgumentException("Không tìm thấy lớp học");
-        }
-        for (SessionUpdateDTO dto : sessionBulkUpdateDTO.getSessions()) {
-            Session existingSession = sessionRepository.findById(dto.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy buổi học có ID: " + dto.getId()));
-
-            // Chỉ cập nhật các trường cho phép
-            if (dto.getDate() != null) existingSession.setDate(dto.getDate());
-            if (dto.getStartTime() != null) existingSession.setStartTime(dto.getStartTime());
-            if (dto.getEndTime() != null) existingSession.setEndTime(dto.getEndTime());
-            if (dto.getTopic() != null) existingSession.setTopic(dto.getTopic());
-            if (dto.getVideoLink() != null) existingSession.setVideoLink(dto.getVideoLink());
-            if (dto.getReport() != null) existingSession.setReport(dto.getReport());
-            if (dto.getStatus() != null) existingSession.setStatus(dto.getStatus());
-
-            sessionRepository.save(existingSession);
-        }
-    }
-
-    public List<Session> getSessionsByFacilityClassAndDateRange(Integer facilityClassId, LocalDate startDate, LocalDate endDate) {
-        FacilityClass facilityClass = facilityClassRepository.findById(facilityClassId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học có ID: " + facilityClassId));
-
-        return sessionRepository.findByFacilityClass_IdAndDateBetween(facilityClass.getId(), startDate, endDate);
-    }
-
     // ------------------ 1. Lấy danh sách session ----------------------
     public List<SessionAndUserResponseDTO> getSessions(LocalDate start, LocalDate end, Integer classId) {
 
