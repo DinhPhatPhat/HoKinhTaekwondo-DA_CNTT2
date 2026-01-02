@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface FacilityClassUserRepository extends JpaRepository<FacilityClassUser, Integer> {
     List<FacilityClassUser> findByFacilityClass_Id(Integer facilityClassId);
-
+    Optional<FacilityClassUser> findFirstByUserIdAndIsActiveTrue(String userId);
     Optional<FacilityClassUser> findByFacilityClassIdAndUserId(Integer facilityClassId, String userId);
 
     List<FacilityClassUser> findByFacilityClass_IdAndIsActiveTrue(Integer facilityClassId);

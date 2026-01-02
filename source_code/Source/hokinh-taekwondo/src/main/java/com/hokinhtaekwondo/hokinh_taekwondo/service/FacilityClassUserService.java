@@ -219,7 +219,7 @@ public class FacilityClassUserService {
     }
 
     public Integer getCurrentClassIdOfUser(User user) {
-        FacilityClassUser facilityClassUser =  facilityClassUserRepository.findByUserIdAndIsActiveTrue(user.getId())
+        FacilityClassUser facilityClassUser =  facilityClassUserRepository.findFirstByUserIdAndIsActiveTrue(user.getId())
                 .orElse(new FacilityClassUser());
         FacilityClass defaultFacilityClass = new FacilityClass();
         return Optional.ofNullable(facilityClassUser.getFacilityClass()).orElse(defaultFacilityClass).getId();

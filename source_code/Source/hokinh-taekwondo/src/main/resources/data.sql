@@ -160,83 +160,71 @@ INSERT INTO articles (title, content, cover_image, date, category_id, author, ga
 -- SAMPLE DATA FOR USERS
 -- ==========================
 
-INSERT INTO users (id, name, phone_number, date_of_birth, email, password, avatar, role, belt_level, is_active, facility_id, login_pin)
+INSERT INTO users (
+    id, name, phone_number, date_of_birth, email,
+    password, avatar, role, belt_level,
+    is_active, facility_id, login_pin
+)
 VALUES
-    ('u001', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA1@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u010', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA2@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u011', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA3@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u012', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA4@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u013', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA5@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u014', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA6@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u015', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA7@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u016', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA8@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a001', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA1@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a010', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA2@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a011', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA3@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a012', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA4@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a013', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA5@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a014', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA6@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a015', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA7@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('a016', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA8@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b001', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA1@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b010', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA2@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b011', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA3@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b012', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA4@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b013', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA5@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b014', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA6@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b015', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA7@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('b016', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA8@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c001', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA1@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c010', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA2@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c011', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA3@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c012', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA4@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c013', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA5@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c014', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA6@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c015', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA7@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('c016', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA8@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d001', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA1@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d010', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA2@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d011', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA3@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d012', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA4@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d013', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA5@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d014', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA6@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('d015', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA7@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', FALSE, 1, 0),
-    ('d016', 'Nguyen Van A', '0912345678', '1990-03-15', 'coachA8@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 2, 'white', TRUE, 1, 0),
-    ('u002', 'Tran Thi B', '0987654321', '1995-07-20', 'instructorB@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 3, 'black/1', TRUE, 2, 0),
-    ('u003', 'Le Van C', '0978123456', '2000-01-05', 'studentC@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'red', TRUE, 2, 0),
-    ('u004', 'Pham Thi D', '0909090909', '2003-11-10', 'studentD@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 1, 'blue', TRUE, null, 0),
-    ('u005', 'Do Van E', '0923456789', '1998-09-25', 'tuanhoang03062004@gmail.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 0, '', TRUE, null, 0),
-    ('u006', 'Hoang Van F', '0934567890', '2005-06-18', 'studentF@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('u007', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 3, 0),
-('b0077', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 3, 0),
-('b007', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 3, 0),
-('b008', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-('b009', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-('b0010', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('c097', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('c077', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('c07', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('c08', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('c09', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('c01111', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('d097', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('d077', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('d07', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('d08', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('d09', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0),
-    ('d01011', 'Hoang Van FA', '0934567890', '2005-06-18', 'studentFA@example.com', '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2', NULL, 4, 'yellow', TRUE, 1, 0);
+-- Club Head (ONLY ONE)
+('head001', 'Tran Quoc Huy', '0901112222', '1980-05-10',
+ 'clubhead@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 0, '6Đ', TRUE, NULL, 0),
+
+-- Manager
+('mgr001', 'Nguyen Thi Lan', '0902223333', '1985-08-22',
+ 'manager1@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 1, '4Đ', TRUE, 1, 0),
+
+-- Coaches
+('coach001', 'Pham Van Long', '0911111111', '1990-03-15',
+ 'tuanhoang03062004@gmail.com',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 2, '2Đ', TRUE, 1, 0),
+
+('coach002', 'Le Minh Tuan', '0912222222', '1988-11-02',
+ 'coach2@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 2, '1Đ', TRUE, 1, 0),
+
+-- Instructors
+('inst001', 'Tran Thanh Hoa', '0923333333', '1993-06-18',
+ 'instructor1@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 3, 'ĐỎ 2', TRUE, 2, 0),
+
+('inst002', 'Vo Duc Thang', '0924444444', '1991-09-30',
+ 'instructor2@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 3, 'ĐỎ 1', TRUE, 2, 0),
+
+-- Students
+('stu001', 'Nguyen Bao An', '0935555555', '2006-01-05',
+ 'student1@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 4, 'T10', TRUE, 2, 0),
+
+('stu002', 'Pham Khanh Linh', '0936666666', '2007-04-14',
+ 'student2@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 4, 'V7', TRUE, 1, 0),
+
+('stu003', 'Le Gia Bao', '0937777777', '2005-12-09',
+ 'student3@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 4, 'XD5', TRUE, 3, 0),
+
+('stu004', 'Tran My Anh', '0938888888', '2008-07-21',
+ 'student4@taekwondo.vn',
+ '$2a$10$xEfm2O2psFz9B1U0tMnKEuQIz4WxSaqEOi5Hp2iF0FjMadA3wC/R2',
+ NULL, 4, 'ĐỎ 4', TRUE, 3, 0);
 
 -- ==========================
 -- SAMPLE DATA FOR FACILITY_CLASS_USERS
 -- classId = 1
 -- ==========================
-
-INSERT INTO facility_class_users (facility_class_id, user_id, role_in_facility_class, is_active, created_at)
-VALUES
-    (1, 'u001', 'coach', TRUE, NOW()),
-    (1, 'u002', 'instructor', TRUE, NOW()),
-    (1, 'u003', 'student', false, NOW()),
-    (1, 'u006', 'student', TRUE, NOW());
 
 INSERT INTO equipments (
     facility_id, name, unit, damaged_quantity, good_quantity, fixable_quantity,

@@ -607,7 +607,7 @@ public class UserService implements UserDetailsService {
             }
 
             UserInClassDTO userInClass = new UserInClassDTO();
-            userInClass.setUserId(dto.getId());
+            userInClass.setUserId(user.getId());
             userInClass.setRoleInClass(dto.getRoleInClass());
             userInClass.setIsActiveInClass(dto.getIsActiveInClass());
 
