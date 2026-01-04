@@ -27,6 +27,14 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getArticlesHomepage(page, size, type));
     }
 
+    @GetMapping("/homepage/{id}")
+    public ResponseEntity<?> getArticleHomepage(
+            @PathVariable Integer id
+    ) {
+        System.out.println(id);
+        return ResponseEntity.ok(articleService.getArticleById(id));
+    }
+
     @GetMapping("/admin/all-articles-by-category")
     public ResponseEntity<?> getAllArticlesByCategory(@RequestParam Integer categoryId) {
         try {

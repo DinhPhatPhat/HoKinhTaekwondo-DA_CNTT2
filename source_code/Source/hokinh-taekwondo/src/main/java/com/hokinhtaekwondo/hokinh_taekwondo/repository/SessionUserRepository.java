@@ -14,4 +14,5 @@ public interface SessionUserRepository extends JpaRepository<SessionUser, Intege
     void  deleteAllBySessionId(Integer sessionId);
     void deleteAllBySessionIdIn(List<Integer> sessionIds);
     SessionUser findBySessionIdAndUserId(Integer sessionId, String userId);
+    void deleteAllByUserId(String userId);
 }

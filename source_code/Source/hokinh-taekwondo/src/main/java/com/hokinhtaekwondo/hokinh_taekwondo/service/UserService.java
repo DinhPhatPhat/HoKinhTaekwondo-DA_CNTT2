@@ -9,10 +9,7 @@ import com.hokinhtaekwondo.hokinh_taekwondo.model.Facility;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClass;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.FacilityClassUser;
 import com.hokinhtaekwondo.hokinh_taekwondo.model.User;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassRepository;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityClassUserRepository;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.FacilityRepository;
-import com.hokinhtaekwondo.hokinh_taekwondo.repository.UserRepository;
+import com.hokinhtaekwondo.hokinh_taekwondo.repository.*;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.InstructorCodeGenerator;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.ValidateRole;
 import com.hokinhtaekwondo.hokinh_taekwondo.utils.exception.DuplicateUsersException;
@@ -59,6 +56,7 @@ public class UserService implements UserDetailsService {
     private final FacilityClassUserService facilityClassUserService;
     private final FacilityClassUserRepository facilityClassUserRepository;
     private final FacilityClassRepository facilityClassRepository;
+    private final SessionUserRepository sessionUserRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
@@ -313,6 +311,7 @@ public class UserService implements UserDetailsService {
         throw new RuntimeException("Không có quyền tìm kiếm người dùng");
     }
 
+    @Transactional
     public void deleteUserById(String id, User deleteAuthor) {
         if(deleteAuthor.getRole() > 1) {
             throw new RuntimeException("Không có quyền xóa người dùng");
@@ -330,6 +329,10 @@ public class UserService implements UserDetailsService {
                     }
                     throw new RuntimeException("Người dùng hiện đang quản lý các cơ sở: " + facilityNames.substring(0, facilityNames.length() - 2) + ". Vui lòng gỡ quyền quản lý cơ sở cho người dùng trước khi xóa");
                 }
+            }
+            else if(deletedUser.getRole() > 1) {
+                facilityClassUserRepository.deleteAllByUserId(deletedUser.getId());
+                sessionUserRepository.deleteAllByUserId(deletedUser.getId());
             }
             userRepository.delete(deletedUser);
         }

@@ -42,4 +42,6 @@ public interface FacilityClassUserRepository extends JpaRepository<FacilityClass
     List<ClassOfStudent> findClassesOfStudents(
             @Param("studentIds") List<String> studentIds
     );
+
+    void deleteAllByUserId(String userId);
 }

@@ -115,6 +115,14 @@ public class ArticleService {
         return articlePage.map(this::convertToDTO);
     }
 
+    public ArticleDTO getArticleById(Integer id) {
+        Article article = articleRepository.findById(id).orElse(null);
+        if(article == null) {
+            return null;
+        }
+        return  convertToDTO(article);
+    }
+
     // ----------- GET ALL ARTICLES BY CATEGORY -----------
     public List<ArticleDTO> getAllArticlesByCategory(Integer categoryId) {
         ArticleCategory category = articleCategoryRepository.findById(categoryId)
