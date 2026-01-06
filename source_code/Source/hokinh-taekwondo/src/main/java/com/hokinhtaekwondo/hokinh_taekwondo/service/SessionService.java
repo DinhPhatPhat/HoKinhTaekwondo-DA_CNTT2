@@ -362,7 +362,7 @@ public class SessionService {
 
     public SessionStatistics getInstructorSessionAttendancesStatistics(Integer facilityId, LocalDate start, LocalDate end) {
 
-        if(end.isBefore(VietNamTime.nowDate())) {
+        if(end.isAfter(VietNamTime.nowDate())) {
             throw new RuntimeException("Thời điểm thống kê không phù hợp");
         }
 
