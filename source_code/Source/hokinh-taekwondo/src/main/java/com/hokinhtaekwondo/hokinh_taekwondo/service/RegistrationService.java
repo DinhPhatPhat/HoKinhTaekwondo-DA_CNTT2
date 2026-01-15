@@ -72,7 +72,7 @@ public class RegistrationService {
                 "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
 
                 "<div style='background: linear-gradient(to right, #dc2626, #2563eb); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;'>" +
-                "<h1 style='color: white; margin: 0;'>Hồ Kính Taekwondo</h1>" +
+                "<h1 style='color: white; margin: 0;'>Hổ Kình Taekwondo</h1>" +
                 "</div>" +
 
                 "<div style='background-color: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;'>" +

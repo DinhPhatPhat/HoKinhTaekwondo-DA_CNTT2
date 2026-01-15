@@ -32,8 +32,6 @@ public class FacilityController {
 
     @Autowired
     private FacilityService facilityService;
-    @Autowired
-    private UserService userService;
 
     @PostMapping("/admin/create")
     public ResponseEntity<?> create(@AuthenticationPrincipal User creator,

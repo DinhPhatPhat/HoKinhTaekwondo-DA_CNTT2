@@ -53,7 +53,7 @@ public class SessionUserService {
         double distance = haversine(dto.getLatitude(), dto.getLongitude(),
                 facility.getLatitude(), facility.getLongitude());
 
-        if (distance > 50) {
+        if (distance > 120) {
             throw new SecurityException("Bạn đang ở quá xa để check-in.");
         }
 
